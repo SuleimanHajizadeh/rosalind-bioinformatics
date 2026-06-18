@@ -1,0 +1,103 @@
+# Extract sequences from rosalind_splc.txt
+# The file content is in text_0 of the fetch result
+content = """>Rosalind_8969
+ATGGTGAAGCGTATGGGCCGAAATGGTCATTCCTCATCCGAAACTTTCATAACATCCGCG
+CCTATTCATTAGTGTGTCTCCTAGTTATTCGCGGTCATGCAACCATGGCGGGACGCAATA
+CGCTCGACCGTACTAAATTGCATGGATTTAACCGGCTAGGATCTGTACCGGCTTCACCGA
+GTCTGCAACAATTCGCCTACGTTGGCGTGGGACGCCCTTCCCGTACTGCTGGATTTCGGA
+ATTGGTACTGGAAGCACGTCCTCAGCCCCTAACACTCAACAATTCCAAACTCTGAGTGGA
+CCTTCATTGTCGGTCGTTGGATTTACTTTGTCCGGTGGTGCGGAGGCCATGTTCGCACTT
+GCTGCTCGCCCGCAGGAAGGACTACAATCACGTGCTGTTGTTCAGAAGACAGTAGAGGGC
+TAAGTTGGCGATCTCGGCGGCGCCTCTTACTCTGATGGTCCCACATAAGCTAACTTACAT
+CTACAGTGGTCGGTACAATGGAGGCCCTATTTTAAGGCAGTCCTATGAGCCTCCAAATCG
+GCACACAAGGACATATTTCCAATGGCTCCAGGTGTCAGGGCCCTCACTCTAGGGGCTGGG
+GTTATTGTCGGCATCTGTCTGGTTGCGGCGGCCTATTTGGACTTCGAGAGCACGGGAGTT
+ATCACAGTCCGCGGCAGGCGATCTTAAGCTCCCTACCGATACTGCGGAGGCGCTGACCGA
+AGTTAGGCGGGCAGCGGCATCATACAGGGCGAGGAAAACCTCCACCACTCGCATAGAAAA
+CGAGTGGTTTACAACAGACTTGACCAGATTGCATGTGGGATCGTATTACCTTTACAGCCA
+CCCGGCACTGCCTATTCGCTCAACGCCATCGAAAGGGATGTCGCAGTACGTTTCCGACAT
+CGTACGAGCGGTTCCTGGAGCCCGCTGCTACCTTGCCATTCCCCCATTATCAAATTTCTT
+CCTTGCGCTGCCTTACCAAGATCAAATGA
+>Rosalind_3479
+TTCGCTCAACGCCATCGAAAGGGATGTCGCAGTA
+>Rosalind_6697
+TCACGTGCTGTTGTTCAGAAGACAGTAGAGGGCTAAGTTGGCGATC
+>Rosalind_1986
+ACATCCGCGCCTATTCATTAGTGTGTCTCCTAGTTATT
+>Rosalind_8001
+CCGGCTTCACCGAGTCTGCAACAATTCGCCTACGTTGGCGTGGGACGC
+>Rosalind_0731
+GGGCCCTCACTCTAGGGGC
+>Rosalind_7986
+CGCAATACGCTCGACCGTACT
+>Rosalind_2246
+CCTTCATTGTCGGTCGTTGGATTTACT
+>Rosalind_2479
+TACATCTACAGTGGTCGGTACAATGGAGGCCCTATTTTAAGGCAGTCC
+>Rosalind_3258
+CATTCCCCCAT
+>Rosalind_7273
+ACCGAAGTTAGGCGGGCAGCGGCATCATACAGGGCGAGGAAA
+>Rosalind_0250
+AAGCACGTCC
+>Rosalind_2590
+GTGGGATCGT
+>Rosalind_6103
+CTATTTGGACTTCGAGAGCACGGGAG"""
+
+seqs = {}
+curr_id = None
+for line in content.split('\n'):
+    line = line.strip()
+    if not line: continue
+    if line.startswith(">"):
+        curr_id = line[1:]
+        seqs[curr_id] = ""
+    else:
+        seqs[curr_id] += line
+
+seq_list = list(seqs.values())
+dna_seq = seq_list[0]
+introns = seq_list[1:]
+
+# Excise introns
+exon_seq = dna_seq
+for intron in introns:
+    exon_seq = exon_seq.replace(intron, "")
+
+# Define RNA codon table
+codon_table = {
+    'ATA':'I', 'ATC':'I', 'ATT':'I', 'ATG':'M',
+    'ACA':'T', 'ACC':'T', 'ACG':'T', 'ACT':'T',
+    'AAC':'N', 'AAT':'N', 'AAA':'K', 'AAG':'K',
+    'AGC':'S', 'AGT':'S', 'AGA':'R', 'AGG':'R',
+    'CTA':'L', 'CTC':'L', 'CTG':'L', 'CTT':'L',
+    'CCA':'P', 'CCC':'P', 'CCG':'P', 'CCT':'P',
+    'CAC':'H', 'CAT':'H', 'CAA':'Q', 'CAG':'Q',
+    'CGA':'R', 'CGC':'R', 'CGG':'R', 'CGT':'R',
+    'GTA':'V', 'GTC':'V', 'GTG':'V', 'GTT':'V',
+    'GCA':'A', 'GCC':'A', 'GCG':'A', 'GCT':'A',
+    'GAC':'D', 'GAT':'D', 'GAA':'E', 'GAG':'E',
+    'GGA':'G', 'GGC':'G', 'GGG':'G', 'GGT':'G',
+    'TCA':'S', 'TCC':'S', 'TCG':'S', 'TCT':'S',
+    'TTC':'F', 'TTT':'F', 'TTA':'L', 'TTG':'L',
+    'TAC':'Y', 'TAT':'Y', 'TAA':'Stop', 'TAG':'Stop',
+    'TGC':'C', 'TGT':'C', 'TGA':'Stop', 'TGG':'W',
+}
+
+# Translate
+def translate(dna):
+    protein = ""
+    for i in range(0, len(dna) - 2, 3):
+        codon = dna[i:i+3]
+        aa = codon_table.get(codon, "")
+        if aa == "Stop": break
+        protein += aa
+    return protein
+
+# Find Start codon index and translate
+start_index = exon_seq.find("ATG")
+if start_index != -1:
+    print(translate(exon_seq[start_index:]))
+else:
+    print("Start codon not found.")
