@@ -1,0 +1,15 @@
+((((Fuligula_caesius,Holodactylus_mehelyi),Totanus_medirostris),Ziphius_tinctorius))Brachypelma_citreola;
+((((Fuligula_caesius,Holodactylus_mehelyi),Ziphius_tinctorius),Totanus_medirostris))Brachypelma_citreola;
+((((Fuligula_caesius,Ziphius_tinctorius),Holodactylus_mehelyi),Totanus_medirostris))Brachypelma_citreola;
+(((Fuligula_caesius,(Holodactylus_mehelyi,Ziphius_tinctorius)),Totanus_medirostris))Brachypelma_citreola;
+(((Fuligula_caesius,Holodactylus_mehelyi),(Totanus_medirostris,Ziphius_tinctorius)))Brachypelma_citreola;
+((((Fuligula_caesius,Totanus_medirostris),Holodactylus_mehelyi),Ziphius_tinctorius))Brachypelma_citreola;
+((((Fuligula_caesius,Totanus_medirostris),Ziphius_tinctorius),Holodactylus_mehelyi))Brachypelma_citreola;
+((((Fuligula_caesius,Ziphius_tinctorius),Totanus_medirostris),Holodactylus_mehelyi))Brachypelma_citreola;
+(((Fuligula_caesius,(Totanus_medirostris,Ziphius_tinctorius)),Holodactylus_mehelyi))Brachypelma_citreola;
+(((Fuligula_caesius,Totanus_medirostris),(Holodactylus_mehelyi,Ziphius_tinctorius)))Brachypelma_citreola;
+(((Fuligula_caesius,(Holodactylus_mehelyi,Totanus_medirostris)),Ziphius_tinctorius))Brachypelma_citreola;
+(((Fuligula_caesius,Ziphius_tinctorius),(Holodactylus_mehelyi,Totanus_medirostris)))Brachypelma_citreola;
+((Fuligula_caesius,((Holodactylus_mehelyi,Totanus_medirostris),Ziphius_tinctorius)))Brachypelma_citreola;
+((Fuligula_caesius,((Holodactylus_mehelyi,Ziphius_tinctorius),Totanus_medirostris)))Brachypelma_citreola;
+((Fuligula_caesius,(Holodactylus_mehelyi,(Totanus_medirostris,Ziphius_tinctorius))))Brachypelma_citreola;
