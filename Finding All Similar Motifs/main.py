@@ -7,7 +7,7 @@ def ksim_dict(k, s, t):
     # prev_row[j] stores {start_pos: distance}
     prev_row = [None] * (n + 1)
     for j in range(n + 1):
-        prev_row[j] = {j: 0}
+        prev_row[j] = {start: j - start for start in range(max(0, j - k), j + 1)}
         
     results = []
     
