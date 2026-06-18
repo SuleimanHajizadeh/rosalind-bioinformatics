@@ -1,4 +1,5 @@
 #include <fstream>
+#include <cctype>
 #include "newick_parser.h"
 
 using namespace std;
@@ -63,10 +64,14 @@ int NewickParser::getPos()
 UnrootedTree* NewickParser::parse()
 {
 	parseError = false;
+	while (!str.empty() && isspace((unsigned char)str.back()))
+	{
+		str.pop_back();
+	}
 	it = str.begin();
 	strEnd = str.end();
 
-	if (*str.rbegin() != ';') return NULL;
+	if (str.empty() || *str.rbegin() != ';') return NULL;
 	UnrootedTree *t = parseSubTree();
 	parseLength();
 	if (it == strEnd)
