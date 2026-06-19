@@ -1,101 +1,73 @@
 import os
 
+# Komplementar zənciri tapırıq
+# Helper to get the reverse complement of a sequence
+
+
 def reverse_complement(s):
-    comp = {'A': 'T', 'T': 'A', 'C': 'G', 'G': 'C'}
+    comp = {"A": "T", "T": "A", "C": "G", "G": "C"}
     return "".join(comp[c] for c in reversed(s))
 
+
 def solve_gasm(input_path, output_path):
-    with open(input_path, 'r') as f:
+    with open(input_path, "r") as f:
         reads = [line.strip() for line in f if line.strip()]
-        
+
     if not reads:
-        print("No reads found!")
+        print("Oxunuşlar tapılmadı!")
         return
-        
+
     L = len(reads[0])
-    
+
+    # K-mer ölçüsünü (k) azaldaraq qrafı qurub yoxlayırıq
+    # Try decreasing k sizes to find the single circular genome path
     for k in range(L - 1, 0, -1):
-        # Extract all (k+1)-mers from reads and their reverse complements
         edges = set()
         for r in reads:
             r_rc = reverse_complement(r)
             for i in range(len(r) - k):
                 edges.add(r[i : i + k + 1])
                 edges.add(r_rc[i : i + k + 1])
-                
-        # Build the de Bruijn graph: nodes are k-mers, edges are (k+1)-mers
+
+        # De Bruijn qrafının adjacency siyahısını qururuq
+        # Build De Bruijn graph: nodes are k-mers, edges are (k+1)-mers
         adj = {}
         in_degree = {}
         for edge in edges:
             u = edge[:-1]
             v = edge[1:]
-            if u not in adj:
-                adj[u] = []
-            adj[u].append(v)
-            if v not in in_degree:
-                in_degree[v] = 0
-            in_degree[v] += 1
-            if u not in in_degree:
-                in_degree[u] = 0
-                
-        # Check if every node has in-degree exactly 1 and out-degree exactly 1
-        valid = True
-        for node in in_degree:
-            out_deg = len(adj.get(node, []))
-            in_deg = in_degree[node]
-            if out_deg != 1 or in_deg != 1:
-                valid = False
-                break
-                
-        if not valid:
+            adj.setdefault(u, []).append(v)
+            in_degree[v] = in_degree.get(v, 0) + 1
+            in_degree.setdefault(u, 0)
+
+        # Hər bir düyünün giriş və çıxış dərəcəsini yoxlayırıq (tək dövr olması üçün 1 olmalıdır)
+        # Verify if each node has in-degree == 1 and out-degree == 1 (Eulerian cycle)
+        if any(len(targets) != 1 for targets in adj.values()):
             continue
-            
-        # Count connected components (cycles)
-        visited = set()
-        cycles = []
-        for start in in_degree:
-            if start not in visited:
-                cycle = []
-                curr = start
-                cycle_valid = True
-                while curr not in visited:
-                    visited.add(curr)
-                    cycle.append(curr)
-                    # Follow the unique outgoing edge
-                    next_nodes = adj.get(curr, [])
-                    if not next_nodes:
-                        cycle_valid = False
-                        break
-                    curr = next_nodes[0]
-                # Check if it successfully closed back to the start node
-                if cycle_valid and curr == start:
-                    cycles.append(cycle)
-                else:
-                    valid = False
-                    break
-                    
-        if valid and len(cycles) == 2:
-            print(f"Found k = {k}")
-            # Reconstruct the cycle sequence from one of the cycles
-            cycle = cycles[0]
-            res = ""
-            for i in range(len(cycle)):
-                next_node = cycle[(i + 1) % len(cycle)]
-                res += next_node[-1]
-                
-            with open(output_path, 'w') as out_f:
-                out_f.write(res + '\n')
-            print("Successfully wrote genome sequence to output.txt.")
-            print(f"Genome length: {len(res)}")
-            return
-            
-    print("Could not find any k that yields exactly 2 directed cycles.")
+        if any(deg != 1 for deg in in_degree.values()):
+            continue
 
-def main():
-    base_dir = os.path.dirname(os.path.abspath(__file__))
-    input_path = os.path.join(base_dir, 'rosalind_gasm.txt')
-    output_path = os.path.join(base_dir, 'output.txt')
-    solve_gasm(input_path, output_path)
+        # Eulerian dövrü üzrə genomu bərpa edirik
+        # Traverese the cycle to reconstruct the genome
+        start = next(iter(adj))
+        curr = start
+        path = []
+        while True:
+            path.append(curr[0])
+            curr = adj[curr][0]
+            if curr == start:
+                break
+        genome = "".join(path)
 
-if __name__ == '__main__':
-    main()
+        with open(output_path, "w") as f:
+            f.write(genome + "\n")
+
+        print(f"Genom uzunluğu (k={k}): {len(genome)}")
+        return
+
+
+if __name__ == "__main__":
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    input_file = os.path.join(script_dir, "rosalind_gasm.txt")
+    output_file = os.path.join(script_dir, "output.txt")
+    solve_gasm(input_file, output_file)

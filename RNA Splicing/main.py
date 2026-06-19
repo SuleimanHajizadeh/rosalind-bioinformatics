@@ -1,103 +1,59 @@
-# Extract sequences from rosalind_splc.txt
-# The file content is in text_0 of the fetch result
-content = """>Rosalind_8969
-ATGGTGAAGCGTATGGGCCGAAATGGTCATTCCTCATCCGAAACTTTCATAACATCCGCG
-CCTATTCATTAGTGTGTCTCCTAGTTATTCGCGGTCATGCAACCATGGCGGGACGCAATA
-CGCTCGACCGTACTAAATTGCATGGATTTAACCGGCTAGGATCTGTACCGGCTTCACCGA
-GTCTGCAACAATTCGCCTACGTTGGCGTGGGACGCCCTTCCCGTACTGCTGGATTTCGGA
-ATTGGTACTGGAAGCACGTCCTCAGCCCCTAACACTCAACAATTCCAAACTCTGAGTGGA
-CCTTCATTGTCGGTCGTTGGATTTACTTTGTCCGGTGGTGCGGAGGCCATGTTCGCACTT
-GCTGCTCGCCCGCAGGAAGGACTACAATCACGTGCTGTTGTTCAGAAGACAGTAGAGGGC
-TAAGTTGGCGATCTCGGCGGCGCCTCTTACTCTGATGGTCCCACATAAGCTAACTTACAT
-CTACAGTGGTCGGTACAATGGAGGCCCTATTTTAAGGCAGTCCTATGAGCCTCCAAATCG
-GCACACAAGGACATATTTCCAATGGCTCCAGGTGTCAGGGCCCTCACTCTAGGGGCTGGG
-GTTATTGTCGGCATCTGTCTGGTTGCGGCGGCCTATTTGGACTTCGAGAGCACGGGAGTT
-ATCACAGTCCGCGGCAGGCGATCTTAAGCTCCCTACCGATACTGCGGAGGCGCTGACCGA
-AGTTAGGCGGGCAGCGGCATCATACAGGGCGAGGAAAACCTCCACCACTCGCATAGAAAA
-CGAGTGGTTTACAACAGACTTGACCAGATTGCATGTGGGATCGTATTACCTTTACAGCCA
-CCCGGCACTGCCTATTCGCTCAACGCCATCGAAAGGGATGTCGCAGTACGTTTCCGACAT
-CGTACGAGCGGTTCCTGGAGCCCGCTGCTACCTTGCCATTCCCCCATTATCAAATTTCTT
-CCTTGCGCTGCCTTACCAAGATCAAATGA
->Rosalind_3479
-TTCGCTCAACGCCATCGAAAGGGATGTCGCAGTA
->Rosalind_6697
-TCACGTGCTGTTGTTCAGAAGACAGTAGAGGGCTAAGTTGGCGATC
->Rosalind_1986
-ACATCCGCGCCTATTCATTAGTGTGTCTCCTAGTTATT
->Rosalind_8001
-CCGGCTTCACCGAGTCTGCAACAATTCGCCTACGTTGGCGTGGGACGC
->Rosalind_0731
-GGGCCCTCACTCTAGGGGC
->Rosalind_7986
-CGCAATACGCTCGACCGTACT
->Rosalind_2246
-CCTTCATTGTCGGTCGTTGGATTTACT
->Rosalind_2479
-TACATCTACAGTGGTCGGTACAATGGAGGCCCTATTTTAAGGCAGTCC
->Rosalind_3258
-CATTCCCCCAT
->Rosalind_7273
-ACCGAAGTTAGGCGGGCAGCGGCATCATACAGGGCGAGGAAA
->Rosalind_0250
-AAGCACGTCC
->Rosalind_2590
-GTGGGATCGT
->Rosalind_6103
-CTATTTGGACTTCGAGAGCACGGGAG"""
+import os
+from Bio.Seq import Seq
 
-seqs = {}
-curr_id = None
-for line in content.split('\n'):
-    line = line.strip()
-    if not line: continue
-    if line.startswith(">"):
-        curr_id = line[1:]
-        seqs[curr_id] = ""
-    else:
-        seqs[curr_id] += line
+# İntronları çıxarıb ekzonları birləşdirərək RNT-ni proteinə translyasiya edirik
+# Excise introns from DNA sequence and translate the joined exons to protein
 
-seq_list = list(seqs.values())
-dna_seq = seq_list[0]
-introns = seq_list[1:]
 
-# Excise introns
-exon_seq = dna_seq
-for intron in introns:
-    exon_seq = exon_seq.replace(intron, "")
+def translate(seq):
+    # DNT-ni proteinə çeviririk (Stop kodonları silirik)
+    # Translate DNA sequence to protein sequence
+    dna = Seq(seq)
+    prot = str(dna.translate(to_stop=True))
+    return prot
 
-# Define RNA codon table
-codon_table = {
-    'ATA':'I', 'ATC':'I', 'ATT':'I', 'ATG':'M',
-    'ACA':'T', 'ACC':'T', 'ACG':'T', 'ACT':'T',
-    'AAC':'N', 'AAT':'N', 'AAA':'K', 'AAG':'K',
-    'AGC':'S', 'AGT':'S', 'AGA':'R', 'AGG':'R',
-    'CTA':'L', 'CTC':'L', 'CTG':'L', 'CTT':'L',
-    'CCA':'P', 'CCC':'P', 'CCG':'P', 'CCT':'P',
-    'CAC':'H', 'CAT':'H', 'CAA':'Q', 'CAG':'Q',
-    'CGA':'R', 'CGC':'R', 'CGG':'R', 'CGT':'R',
-    'GTA':'V', 'GTC':'V', 'GTG':'V', 'GTT':'V',
-    'GCA':'A', 'GCC':'A', 'GCG':'A', 'GCT':'A',
-    'GAC':'D', 'GAT':'D', 'GAA':'E', 'GAG':'E',
-    'GGA':'G', 'GGC':'G', 'GGG':'G', 'GGT':'G',
-    'TCA':'S', 'TCC':'S', 'TCG':'S', 'TCT':'S',
-    'TTC':'F', 'TTT':'F', 'TTA':'L', 'TTG':'L',
-    'TAC':'Y', 'TAT':'Y', 'TAA':'Stop', 'TAG':'Stop',
-    'TGC':'C', 'TGT':'C', 'TGA':'Stop', 'TGG':'W',
-}
 
-# Translate
-def translate(dna):
-    protein = ""
-    for i in range(0, len(dna) - 2, 3):
-        codon = dna[i:i+3]
-        aa = codon_table.get(codon, "")
-        if aa == "Stop": break
-        protein += aa
-    return protein
+def main():
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    input_path = os.path.join(script_dir, "rosalind_splc.txt")
+    output_path = os.path.join(script_dir, "output.txt")
 
-# Find Start codon index and translate
-start_index = exon_seq.find("ATG")
-if start_index != -1:
-    print(translate(exon_seq[start_index:]))
-else:
-    print("Start codon not found.")
+    if not os.path.exists(input_path):
+        print(f"Xəta: {input_path} tapılmadı.")
+        return
+
+    # FASTA formatlı faylı oxuyuruq (ilk ardıcıllıq DNT-dir, qalanları intronlardır)
+    # Parse FASTA: first record is sequence, remaining are introns to remove
+    with open(input_path, "r") as f:
+        lines = f.read().splitlines()
+
+    seqs = []
+    current_seq = []
+    for line in lines:
+        line = line.strip()
+        if line.startswith(">"):
+            if current_seq:
+                seqs.append("".join(current_seq))
+                current_seq = []
+        else:
+            current_seq.append(line)
+    if current_seq:
+        seqs.append("".join(current_seq))
+
+    dna = seqs[0]
+    introns = seqs[1:]
+
+    # İntronları DNT-dən kəsib çıxarırıq
+    # Remove all introns from the DNA sequence
+    for intron in introns:
+        dna = dna.replace(intron, "")
+
+    result = translate(dna)
+    print(result)
+
+    with open(output_path, "w") as f:
+        f.write(result + "\n")
+
+
+if __name__ == "__main__":
+    main()

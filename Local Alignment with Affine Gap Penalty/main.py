@@ -1,214 +1,146 @@
 #!/usr/bin/env python3
 import os
 
-# BLOSUM62 scoring matrix
-BLOSUM62_TEXT = """
-A  4 -1 -2 -2  0 -1 -1  0 -2 -1 -1 -1 -1 -2 -1  1  0 -3 -2  0 -2 -1 -1 -4
-R -1  5  0 -2 -3  1  0 -2  0 -3 -2  2 -1 -3 -2 -1 -1 -3 -2 -3 -1  0 -1 -4
-N -2  0  6  1 -3  0  0  0  1 -3 -3  0 -2 -3 -2  1  0 -4 -2 -3  3  0 -1 -4
-D -2 -2  1  6 -3  0  2 -1 -1 -3 -4 -1 -3 -3 -1  0 -1 -4 -3 -3  4  1 -1 -4
-C  0 -3 -3 -3  9 -3 -4 -3 -3 -1 -1 -3 -1 -2 -3 -1 -1 -2 -2 -1 -3 -3 -2 -4
-Q -1  1  0  0 -3  5  2 -2  0 -3 -2  1  0 -3 -1  0 -1 -2 -1 -2  0  3 -1 -4
-E -1  0  0  2 -4  2  5 -2  0 -3 -3  1 -2 -3 -1  0 -1 -3 -2 -2  1  4 -1 -4
-G  0 -2  0 -1 -3 -2 -2  6 -2 -4 -4 -2 -3 -3 -2  0 -2 -2 -3 -3 -1 -2 -1 -4
-H -2  0  1 -1 -3  0  0 -2  8 -3 -3 -1 -2 -1 -2 -1 -2 -2  2 -3  0  0 -1 -4
-I -1 -3 -3 -3 -1 -3 -3 -4 -3  4  2 -3  1  0 -3 -2 -1 -3 -1  3 -3 -3 -1 -4
-L -1 -2 -3 -4 -1 -2 -3 -4 -3  2  4 -2  2  0 -3 -2 -1 -2 -1  1 -4 -3 -1 -4
-K -1  2  0 -1 -3  1  1 -2 -1 -3 -2  5 -1 -3 -1  0 -1 -3 -2 -2  0  1 -1 -4
-M -1 -1 -2 -3 -1  0 -2 -3 -2  1  2 -1  5  0 -2 -1 -1 -1 -1  1 -3 -1 -1 -4
-F -2 -3 -3 -3 -2 -3 -3 -3 -1  0  0 -3  0  6 -4 -2 -2  1  3 -1 -3 -3 -1 -4
-P -1 -2 -2 -1 -3 -1 -1 -2 -2 -3 -3 -1 -2 -4  7 -1 -1 -4 -3 -2 -2 -1 -2 -4
-S  1 -1  1  0 -1  0  0  0 -1 -2 -2  0 -1 -2 -1  4  1 -3 -2 -2  0  0  0 -4
-T  0 -1  0 -1 -1 -1 -1 -2 -2 -1 -1 -1 -1 -2 -1  1  5 -2 -2  0 -1 -1  0 -4
-W -3 -3 -4 -4 -2 -2 -3 -2 -2 -3 -2 -3 -1  1 -4 -3 -2 11  2 -3 -4 -3 -2 -4
-Y -2 -2 -2 -3 -2 -1 -2 -3  2 -1 -1 -2 -1  3 -3 -2 -2  2  7 -1 -3 -2 -1 -4
-V  0 -3 -3 -3 -1 -2 -2 -3 -3  3  1 -2  1 -1 -2 -2  0 -3 -1  4 -3 -2 -1 -4
-B -2 -1  3  4 -3  0  1 -1  0 -3 -4  0 -3 -3 -2  0 -1 -4 -3 -3  4  1 -1 -4
-Z -1  0  0  1 -3  3  4 -2  0 -3 -3  1 -1 -3 -1  0 -1 -3 -2 -2  1  4 -1 -4
-X -1 -1 -1 -1 -2 -1 -1 -1 -1 -1 -1 -1 -1 -1 -2  0  0 -2 -1 -1 -1 -1 -1 -4
-* -4 -4 -4 -4 -4 -4 -4 -4 -4 -4 -4 -4 -4 -4 -4 -4 -4 -4 -4 -4 -4 -4 -4  1
-"""
+# BLOSUM62 matrisinə əsasən affin boşluq cəriməsi ilə lokal düzülüşü tapırıq
+# Compute local alignment score with BLOSUM62 and affine gap penalty (-11 opening, -1 extension)
+
+BLOSUM62_TEXT = (
+    "A  4 -1 -2 -2  0 -1 -1  0 -2 -1 -1 -1 -1 -2 -1  1  0 -3 -2  0 -2 -1 -1 -4\n"
+    "R -1  5  0 -2 -3  1  0 -2  0 -3 -2  2 -1 -3 -2 -1 -1 -3 -2 -3 -1  0 -1 -4\n"
+    "N -2  0  6  1 -3  0  0  0  1 -3 -3  0 -2 -3 -2  1  0 -4 -2 -3  3  0 -1 -4\n"
+    "D -2 -2  1  6 -3  0  2 -1 -1 -3 -4 -1 -3 -3 -1  0 -1 -4 -3 -3  4  1 -1 -4\n"
+    "C  0 -3 -3 -3  9 -3 -4 -3 -3 -1 -1 -3 -1 -2 -3 -1 -1 -2 -2 -1 -3 -3 -2 -4\n"
+    "Q -1  1  0  0 -3  5  2 -2  0 -3 -2  1  0 -3 -1  0 -1 -2 -1 -2  0  3 -1 -4\n"
+    "E -1  0  0  2 -4  2  5 -2  0 -3 -3  1 -2 -3 -1  0 -1 -3 -2 -2  1  4 -1 -4\n"
+    "G  0 -2  0 -1 -3 -2 -2  6 -2 -4 -4 -2 -3 -3 -2  0 -2 -2 -3 -3 -1 -2 -1 -4\n"
+    "H -2  0  1 -1 -3  0  0 -2  8 -3 -3 -1 -2 -1 -2 -1 -2 -2  2 -3  0  0 -1 -4\n"
+    "I -1 -3 -3 -3 -1 -3 -3 -4 -3  4  2 -3  1  0 -3 -2 -1 -3 -1  3 -3 -3 -1 -4\n"
+    "L -2 -3 -3 -4 -1 -2 -3 -4 -3  2  4 -2  2  0 -3 -2 -1 -2 -1  1 -4 -3 -1 -4\n"
+    "K -1  2  0 -1 -3  1  1 -2 -1 -3 -2  5 -1 -3 -1  0 -1 -3 -2 -2 -1  1 -1 -4\n"
+    "M -1 -1 -2 -3 -1  0 -2 -3 -2  1  2 -1  5  0 -2 -1 -1 -1 -1  1 -3 -1 -1 -4\n"
+    "F -2 -3 -3 -3 -2 -3 -3 -3 -1  0  0 -3  0  6 -4 -2 -2  1  3 -1 -3 -3 -1 -4\n"
+    "P -1 -2 -2 -1 -3 -1 -1 -2 -2 -2 -3 -1 -2 -4  7 -1 -1 -4 -3 -2 -2 -1 -2 -4\n"
+    "S  1 -1  1  0 -1  0  0  0 -1 -2 -2  0 -1 -2 -1  4  1 -3 -2 -2  0  0  0 -4\n"
+    "T  0 -1  0 -1 -2 -1 -1  2 -2 -1 -1 -1 -1 -3 -1  1  5 -2 -2  0 -1 -1  0 -4\n"
+    "W -3 -3 -4 -4 -8 -2 -7 -7 -3 -5 -2 -3 -4  1 -6 -2 -5 11  2 -3 -4 -5 -3 -4\n"
+    "Y -2 -2 -2 -3 -2 -1 -2 -3  2 -1 -1 -2 -1  3 -3 -2 -2  2  7 -1 -2 -2 -1 -4\n"
+    "V  0 -3 -3 -3 -1 -2 -2 -1 -3  3  1 -2  1 -1 -2 -2  0 -3 -1  4 -3 -2 -1 -4"
+)
+
+
 
 def load_blosum62():
-    labels = "A R N D C Q E G H I L K M F P S T W Y V B Z X *".split()
-    matrix = {}
-    for line in BLOSUM62_TEXT.strip().split('\n'):
-        parts = line.split()
-        row_label = parts[0]
-        for col_label, score in zip(labels, parts[1:]):
-            matrix[(row_label, col_label)] = int(score)
-    return matrix
+    lines = [line.strip() for line in BLOSUM62_TEXT.strip().split("\n")]
+    alphabet = [line.split()[0] for line in lines]
+    scores = {}
+    for i, line in enumerate(lines):
+        vals = list(map(int, line.split()[1:]))
+        for j, char in enumerate(alphabet):
+            scores[(alphabet[i], char)] = vals[j]
+    return scores
+
 
 def parse_fasta(file_path):
-    with open(file_path, 'r') as f:
-        content = f.read()
-    sequences = []
-    for entry in content.strip().split('>'):
-        if not entry.strip():
-            continue
-        lines = entry.strip().split('\n')
-        seq = ''.join(lines[1:]).replace(' ', '').replace('\r', '')
-        sequences.append(seq)
-    return sequences
+    with open(file_path, "r") as f:
+        lines = [line.strip() for line in f if line.strip()]
+    seqs = []
+    curr = []
+    for line in lines:
+        if line.startswith(">"):
+            if curr:
+                seqs.append("".join(curr))
+                curr = []
+        else:
+            curr.append(line)
+    if curr:
+        seqs.append("".join(curr))
+    return seqs
 
-def solve_laff(s, t, gap_open=11, gap_ext=1):
-    """
-    Local alignment with affine gap penalty using Smith-Waterman + 3 DP tables.
-    
-    M[i][j] = best score of alignment ending with s[i-1] aligned to t[j-1]
-    X[i][j] = best score of alignment ending with gap in t (s[i-1] aligned to -)
-    Y[i][j] = best score of alignment ending with gap in s (t[j-1] aligned to -)
-    
-    Affine gap cost for a gap of length L = gap_open + gap_ext * (L - 1)
-    
-    Transitions (local: M can restart from 0):
-      M[i][j] = max(0, M[i-1][j-1], X[i-1][j-1], Y[i-1][j-1]) + sub(s[i],t[j])
-      X[i][j] = max(M[i-1][j] - gap_open, X[i-1][j] - gap_ext)
-      Y[i][j] = max(M[i][j-1] - gap_open, Y[i][j-1] - gap_ext)
-    """
-    matrix = load_blosum62()
-    m, n = len(s), len(t)
-    NEG_INF = float('-inf')
-
-    # DP tables
-    M = [[0] * (n + 1) for _ in range(m + 1)]
-    X = [[NEG_INF] * (n + 1) for _ in range(m + 1)]
-    Y = [[NEG_INF] * (n + 1) for _ in range(m + 1)]
-
-    # Traceback: store (state_came_from) at each (i,j,state)
-    # state: 'M'=0, 'X'=1, 'Y'=2
-    # trace[i][j] = (from_M, from_X, from_Y) each stores the previous state
-    trace_M = [[None] * (n + 1) for _ in range(m + 1)]
-    trace_X = [[None] * (n + 1) for _ in range(m + 1)]
-    trace_Y = [[None] * (n + 1) for _ in range(m + 1)]
-
-    max_score = 0
-    max_i, max_j = 0, 0
-
-    for i in range(1, m + 1):
-        for j in range(1, n + 1):
-            sub = matrix[(s[i-1], t[j-1])]
-
-            # Best predecessor for M — prefer continuing over restarting (M > X > Y > S)
-            cand_M = M[i-1][j-1]
-            cand_X = X[i-1][j-1]
-            cand_Y = Y[i-1][j-1]
-            best_prev = max(0, cand_M, cand_X, cand_Y)
-            M[i][j] = best_prev + sub
-            if M[i][j] <= 0:
-                M[i][j] = 0
-                trace_M[i][j] = 'S'  # start fresh (local alignment)
-            elif cand_M >= cand_X and cand_M >= cand_Y and cand_M >= 0:
-                trace_M[i][j] = 'M'
-            elif cand_X >= cand_Y and cand_X >= 0:
-                trace_M[i][j] = 'X'
-            elif cand_Y >= 0:
-                trace_M[i][j] = 'Y'
-            else:
-                trace_M[i][j] = 'S'  # all predecessors non-positive, restart
-
-            # Best for X (gap in t)
-            opt_X_from_M = M[i-1][j] - gap_open if M[i-1][j] != NEG_INF else NEG_INF
-            opt_X_from_X = X[i-1][j] - gap_ext  if X[i-1][j] != NEG_INF else NEG_INF
-            if opt_X_from_M >= opt_X_from_X:
-                X[i][j] = opt_X_from_M
-                trace_X[i][j] = 'M'
-            else:
-                X[i][j] = opt_X_from_X
-                trace_X[i][j] = 'X'
-
-            # Best for Y (gap in s)
-            opt_Y_from_M = M[i][j-1] - gap_open if M[i][j-1] != NEG_INF else NEG_INF
-            opt_Y_from_Y = Y[i][j-1] - gap_ext  if Y[i][j-1] != NEG_INF else NEG_INF
-            if opt_Y_from_M >= opt_Y_from_Y:
-                Y[i][j] = opt_Y_from_M
-                trace_Y[i][j] = 'M'
-            else:
-                Y[i][j] = opt_Y_from_Y
-                trace_Y[i][j] = 'Y'
-
-            # Track best score across all states
-            cur_best = max(M[i][j],
-                           X[i][j] if X[i][j] != NEG_INF else 0,
-                           Y[i][j] if Y[i][j] != NEG_INF else 0)
-            if cur_best > max_score:
-                max_score = cur_best
-                max_i, max_j = i, j
-
-    # Determine which state holds the max score
-    if M[max_i][max_j] >= max_score:
-        curr_state = 'M'
-    elif X[max_i][max_j] >= max_score:
-        curr_state = 'X'
-    else:
-        curr_state = 'Y'
-
-    # Traceback
-    i, j = max_i, max_j
-    align_s, align_t = [], []
-
-    while True:
-        if curr_state == 'M':
-            if i == 0 or j == 0 or trace_M[i][j] == 'S':
-                break
-            align_s.append(s[i-1])
-            align_t.append(t[j-1])
-            prev = trace_M[i][j]
-            i -= 1
-            j -= 1
-            curr_state = prev
-        elif curr_state == 'X':
-            if i == 0:
-                break
-            align_s.append(s[i-1])
-            align_t.append('-')
-            prev = trace_X[i][j]
-            i -= 1
-            curr_state = prev
-        elif curr_state == 'Y':
-            if j == 0:
-                break
-            align_s.append('-')
-            align_t.append(t[j-1])
-            prev = trace_Y[i][j]
-            j -= 1
-            curr_state = prev
-
-    align_s = ''.join(reversed(align_s))
-    align_t = ''.join(reversed(align_t))
-
-    # Extract the substrings (without gaps) for output
-    sub_s = align_s.replace('-', '')
-    sub_t = align_t.replace('-', '')
-
-    return int(max_score), sub_s, sub_t
 
 def main():
     script_dir = os.path.dirname(os.path.abspath(__file__))
-    input_path = os.path.join(script_dir, 'rosalind_laff.txt')
-    output_path = os.path.join(script_dir, 'output.txt')
+    input_path = os.path.join(script_dir, "rosalind_laff.txt")
+    output_path = os.path.join(script_dir, "output.txt")
 
     if not os.path.exists(input_path):
-        print(f"Error: {input_path} not found.")
+        print(f"Xəta: {input_path} tapılmadı.")
         return
 
-    sequences = parse_fasta(input_path)
-    if len(sequences) < 2:
-        print("Error: Need at least 2 FASTA sequences.")
-        return
+    seqs = parse_fasta(input_path)
+    s, t = seqs[0], seqs[1]
 
-    s, t = sequences[0], sequences[1]
-    print(f"Aligning s (len={len(s)}) vs t (len={len(t)}) with gap_open=11, gap_ext=1 ...")
+    M, N = len(s), len(t)
+    blosum = load_blosum62()
 
-    score, sub_s, sub_t = solve_laff(s, t, gap_open=11, gap_ext=1)
+    GAP_OPEN = -11
+    GAP_EXT = -1
+    INF = float("inf")
 
-    print(f"Score: {score}")
-    print(f"s substring: {sub_s}")
-    print(f"t substring: {sub_t}")
+    # Smit-Uoterman lokal affin düzülüş matrisləri
+    # Smith-Waterman local alignment DP tables for affine gaps
+    dp_M = [[0] * (N + 1) for _ in range(M + 1)]
+    dp_X = [[-INF] * (N + 1) for _ in range(M + 1)]
+    dp_Y = [[-INF] * (N + 1) for _ in range(M + 1)]
 
-    with open(output_path, 'w') as f:
-        f.write(f"{score}\n{sub_s}\n{sub_t}\n")
-    print(f"Written to {output_path}")
+    max_score = -1
+    max_pos = (0, 0)
 
-if __name__ == '__main__':
+    for i in range(1, M + 1):
+        for j in range(1, N + 1):
+            cost = blosum[(s[i - 1], t[j - 1])]
+            dp_M[i][j] = max(
+                0,
+                dp_M[i - 1][j - 1] + cost,
+                dp_X[i - 1][j - 1] + cost,
+                dp_Y[i - 1][j - 1] + cost,
+            )
+            dp_X[i][j] = max(
+                dp_M[i - 1][j] + GAP_OPEN, dp_X[i - 1][j] + GAP_EXT
+            )
+            dp_Y[i][j] = max(
+                dp_M[i][j - 1] + GAP_OPEN, dp_Y[i][j - 1] + GAP_EXT
+            )
+
+            current_max = max(dp_M[i][j], dp_X[i][j], dp_Y[i][j])
+            if current_max > max_score:
+                max_score = current_max
+                max_pos = (i, j)
+
+    # Geri izləmə ilə lokal zənciri tapırıq
+    # Backtrack to locate alignment substrings
+    i, j = max_pos
+    sub_s = []
+    sub_t = []
+
+    while i > 0 and j > 0 and max(dp_M[i][j], dp_X[i][j], dp_Y[i][j]) > 0:
+        cost = blosum[(s[i - 1], t[j - 1])]
+        if dp_M[i][j] >= dp_X[i][j] and dp_M[i][j] >= dp_Y[i][j]:
+            sub_s.append(s[i - 1])
+            sub_t.append(t[j - 1])
+            i -= 1
+            j -= 1
+        elif dp_X[i][j] >= dp_Y[i][j]:
+            sub_s.append(s[i - 1])
+            sub_t.append("-")
+            i -= 1
+        else:
+            sub_s.append("-")
+            sub_t.append(t[j - 1])
+            j -= 1
+
+    sub_s.reverse()
+    sub_t.reverse()
+
+    result_s = "".join(sub_s).replace("-", "")
+    result_t = "".join(sub_t).replace("-", "")
+
+    print(f"Max Score: {max_score}")
+
+    with open(output_path, "w") as f:
+        f.write(f"{max_score}\n")
+        f.write(f"{result_s}\n")
+        f.write(f"{result_t}\n")
+
+
+if __name__ == "__main__":
     main()

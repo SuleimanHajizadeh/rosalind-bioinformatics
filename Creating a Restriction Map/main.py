@@ -1,100 +1,77 @@
-#!/usr/bin/env python3
 import os
-import math
 from collections import Counter
+
+# Multiset fərqlərindən istifadə edərək restriksiya xəritəsi (restriction map) bərpa edirik
+# Reconstruct restriction map coordinates from the multiset of pairwise distances
+
 
 def solve(L_list):
     counter = Counter(L_list)
     unique_sorted = sorted(counter.keys())
-    
-    num_diffs = len(L_list)
-    n = int((1 + math.sqrt(1 + 8 * num_diffs)) / 2)
-    
-    M = unique_sorted[-1]
-    X = {0, M}
-    counter[M] -= 1
-    
-    def can_place(y, X, counter):
-        needed = Counter()
+
+    # Maksimal məsafə xəritənin son nöqtəsidir (L)
+    # The max distance in the multiset represents the total length L
+    L = max(L_list)
+    X = {0, L}
+
+    # Bütün yarımçıq məsafələri yoxlayaraq nöqtələri bərpa edirik
+    # Iteratively select coordinates that generate matching pairwise distances in multiset
+    remaining_dists = counter.copy()
+    remaining_dists[L] -= 1
+
+    possible_coords = set()
+    for d in unique_sorted:
+        if d != 0 and d != L:
+            possible_coords.add(d)
+            possible_coords.add(L - d)
+
+    sorted_poss = sorted(list(possible_coords))
+
+    # Nöqtələrin koordinatlarını X çoxluğuna yığırıq
+    # Assemble final coordinates set
+    for coord in sorted_poss:
+        # Hər bir namizəd koordinat üçün cari X-dəki nöqtələrlə məsafələri yoxlayırıq
+        # Check pairwise distances between candidate coordinate and current X points
+        valid = True
+        temp_dists = Counter()
         for x in X:
-            diff = abs(y - x)
-            needed[diff] += 1
-            if counter[diff] < needed[diff]:
-                return False
-        return True
+            dist = abs(coord - x)
+            temp_dists[dist] += 1
 
-    def place_point(y, X, counter):
-        for x in X:
-            diff = abs(y - x)
-            counter[diff] -= 1
-        X.add(y)
+        for dist, count in temp_dists.items():
+            if remaining_dists[dist] < count:
+                valid = False
+                break
 
-    def remove_point(y, X, counter):
-        X.remove(y)
-        for x in X:
-            diff = abs(y - x)
-            counter[diff] += 1
+        if valid:
+            X.add(coord)
+            for dist, count in temp_dists.items():
+                remaining_dists[dist] -= 1
 
-    def backtrack(max_idx, X, counter):
-        while max_idx >= 0 and counter[unique_sorted[max_idx]] == 0:
-            max_idx -= 1
-            
-        if max_idx < 0:
-            return sorted(list(X))
-            
-        y = unique_sorted[max_idx]
-        
-        # Option 1: place at y
-        if can_place(y, X, counter):
-            place_point(y, X, counter)
-            res = backtrack(max_idx, X, counter)
-            if res is not None:
-                return res
-            remove_point(y, X, counter)
-            
-        # Option 2: place at M - y
-        alt_y = M - y
-        if can_place(alt_y, X, counter):
-            place_point(alt_y, X, counter)
-            res = backtrack(max_idx, X, counter)
-            if res is not None:
-                return res
-            remove_point(alt_y, X, counter)
-            
-        return None
+    return sorted(list(X))
 
-    return backtrack(len(unique_sorted) - 1, X, counter)
 
 def main():
-    input_path = "rosalind_pdpl.txt"
-    output_path = "output.txt"
-    
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    input_path = os.path.join(script_dir, "rosalind_pd.txt")
+    output_path = os.path.join(script_dir, "output.txt")
+
     if not os.path.exists(input_path):
-        print(f"Error: {input_path} not found.")
+        print(f"Xəta: {input_path} tapılmadı.")
         return
-        
-    with open(input_path, 'r') as f:
-        # Split on spaces and newlines
-        parts = f.read().strip().split()
-        
-    if not parts:
-        print("Error: Input file is empty.")
-        return
-        
-    L_list = [int(p) for p in parts]
-    print(f"Read {len(L_list)} differences from input file.")
-    
-    X = solve(L_list)
-    if X is None:
-        print("Error: No solution found!")
-        return
-        
-    print(f"Found solution X of size {len(X)}")
-    
-    output_str = " ".join(str(x) for x in X)
-    with open(output_path, 'w') as f:
-        f.write(output_str + "\n")
-    print(f"Results written to {output_path}")
+
+    with open(input_path, "r") as f:
+        content = f.read().strip()
+
+    L_list = list(map(int, content.split()))
+    coords = solve(L_list)
+
+    result_str = " ".join(map(str, coords))
+    print(result_str)
+
+    with open(output_path, "w") as f:
+        f.write(result_str + "\n")
+
 
 if __name__ == "__main__":
     main()

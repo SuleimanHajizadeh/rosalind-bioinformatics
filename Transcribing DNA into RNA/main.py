@@ -1,13 +1,15 @@
 # 1. Faylı oxuyuruq
+# Read DNA string from the input file
 with open("rosalind_rna.txt", "r") as file:
-    dna = file.read().strip()  # .strip() boşluqları və yeni sətir simvollarını təmizləyir
+    dna = file.read().strip()
 
-# 2. 'T' hərflərini 'U' ilə əvəz edirik
+# 2. 'T' hərflərini 'U' ilə əvəz edərək RNT zəncirini tapırıq
+# Transcribe DNA to RNA by replacing 'T' with 'U'
 rna = dna.replace("T", "U")
 
-# 3. Nəticəni ekrana yazdırırıq
 print(rna)
 
-# 4. İon variantı yeni fayla qeyd edirik (Rosalind-ə yükləmək üçün rahat olsun deyə)
-with open("rosalind_rna_output.txt", "w") as output_file:
-    output_file.write(rna)
+# 3. Nəticəni output.txt faylına yazırıq
+# Save the transcribed RNA sequence to output.txt
+with open("output.txt", "w") as output_file:
+    output_file.write(rna + "\n")

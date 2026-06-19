@@ -1,50 +1,53 @@
-# rosalind_sseq.py
 import os
 
-# 1. Faylın yerləşdiyi qovluğu tapırıq və FASTA faylını oxuyuruq
-script_dir = os.path.dirname(os.path.abspath(__file__))
-input_path = os.path.join(script_dir, "rosalind_sseq.txt")
+# Böyük s ardıcıllığında kiçik t ardıcıllığının spliced motif indekslərini tapırıq
+# Find the indices of a spliced motif (subsequence) t in a sequence s
 
-sequences = []
-curr_seq = ""
 
-with open(input_path, "r") as file:
-    for line in file:
-        line = line.strip()
-        if not line:
-            continue
+def main():
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    input_path = os.path.join(script_dir, "rosalind_sseq.txt")
+    output_path = os.path.join(script_dir, "output.txt")
+
+    if not os.path.exists(input_path):
+        print(f"Xəta: {input_path} tapılmadı.")
+        return
+
+    # FASTA faylını oxuyuruq
+    # Parse FASTA file to load two sequences
+    with open(input_path, "r") as f:
+        lines = f.read().splitlines()
+
+    seqs = []
+    current_seq = ""
+    for line in lines:
         if line.startswith(">"):
-            if curr_seq:
-                sequences.append(curr_seq)
-                curr_seq = ""
+            if current_seq:
+                seqs.append(current_seq)
+                current_seq = ""
         else:
-            curr_seq += line
-    if curr_seq:
-        sequences.append(curr_seq)
+            current_seq += line.strip()
+    if current_seq:
+        seqs.append(current_seq)
 
-# s və t ardıcıllıqlarını təyin edirik
-s = sequences[0]
-t = sequences[1]
+    s = seqs[0]
+    t = seqs[1]
 
-# 2. t ardıcıllığının s-də alt-ardıcıllıq (subsequence) olaraq yerləşdiyi mövqeləri tapırıq
-# Həris (greedy) yanaşma ilə hər bir nukleotidin ən tez rast gəlinən mövqeyini qeyd edirik
-indices = []
-s_idx = 0
-
-for char in t:
-    # Cari nukleotidi s-də axtarırıq (əvvəlki tapılan mövqedən sonrakı hissədə)
-    while s_idx < len(s):
-        if s[s_idx] == char:
-            # Mövqelər 1-əsaslı (1-indexed) olduğu üçün +1 əlavə edirik
+    indices = []
+    t_idx = 0
+    # t-nin hər bir hərfini s-də axtararaq 1-dən başlayan indeksləri qeyd edirik
+    # Scan s and save 1-based indices of matching letters from t sequentially
+    for s_idx, char in enumerate(s):
+        if t_idx < len(t) and char == t[t_idx]:
             indices.append(s_idx + 1)
-            s_idx += 1
-            break
-        s_idx += 1
+            t_idx += 1
 
-# 3. Nəticələri aralarında boşluqla birləşdirib ekrana çıxarırıq və output.txt faylına yazırıq
-result_str = " ".join(map(str, indices))
-print(result_str)
+    result = " ".join(map(str, indices))
+    print(result)
 
-output_path = os.path.join(script_dir, "output.txt")
-with open(output_path, "w") as out_file:
-    out_file.write(result_str + "\n")
+    with open(output_path, "w") as f:
+        f.write(result + "\n")
+
+
+if __name__ == "__main__":
+    main()

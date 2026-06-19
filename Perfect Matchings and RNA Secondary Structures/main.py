@@ -2,11 +2,14 @@
 import os
 import math
 
-# 1. Faylın yerləşdiyi qovluğu tapırıq və girişi oxuyuruq
+# RNT ardıcıllığında mükəmməl ikili cütləşmələrin (perfect matchings) sayını tapırıq
+# Compute the number of perfect matchings of base pairings (A-U and C-G) in RNA sequence
+
 script_dir = os.path.dirname(os.path.abspath(__file__))
 input_path = os.path.join(script_dir, "rosalind_pmch.txt")
 
 # FASTA formatındakı fayldan yalnız RNT ardıcıllığını oxuyuruq
+# Parse FASTA file to load RNA string
 rna_seq = ""
 with open(input_path, "r") as file:
     for line in file:
@@ -14,20 +17,18 @@ with open(input_path, "r") as file:
         if not line.startswith(">"):
             rna_seq += line
 
-# 2. 'A' (Adenin) və 'C' (Sitozin) nukleotidlərin sayını tapırıq
-# Şərtə görə A-nın sayı U-ya, C-nin sayı isə G-yə bərabərdir (N_A = N_U, N_C = N_G)
-n_A = rna_seq.count('A')
-n_C = rna_seq.count('C')
+# A-lar və C-lər sayını tapırıq (mükəmməl cütləşmə üçün A=U və C=G olmalıdır)
+# Count A and C occurrences
+a = rna_seq.count("A")
+c = rna_seq.count("C")
 
-# 3. Mümkün olan bütün mükəmməl uyğunlaşmaların (perfect matchings) sayını hesablayırıq
-# Hər bir A nukleotidi hər hansı bir U nukleotidi ilə cütləşə bilər (n_A! fərqli üsul)
-# Eyni qaydada hər bir C nukleotidi hər hansı bir G nukleotidi ilə cütləşə bilər (n_C! fərqli üsul)
-# İki cütləşmə bir-birindən asılı olmadığı üçün ümumi say: n_A! * n_C!
-total_matchings = math.factorial(n_A) * math.factorial(n_C)
+# Mükəmməl cütlərin sayı: a! * c!
+# Number of perfect matchings is a! * c!
+ans = math.factorial(a) * math.factorial(c)
+print(ans)
 
-# 4. Nəticəni həm ekrana çıxarırıq, həm də output.txt faylına yazırıq
-print(f"Mükəmməl cütləşmələrin sayı: {total_matchings}")
-
+# Nəticəni output.txt faylına yazırıq
+# Save results to output.txt
 output_path = os.path.join(script_dir, "output.txt")
-with open(output_path, "w") as out_file:
-    out_file.write(str(total_matchings) + "\n")
+with open(output_path, "w") as output_file:
+    output_file.write(str(ans) + "\n")

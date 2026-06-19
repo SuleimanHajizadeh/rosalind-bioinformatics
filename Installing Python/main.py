@@ -1,20 +1,34 @@
+import os
 import sys
-import io
+
+# Zen of Python prinsipini ekrana yazdırıb nəticəni fayla qeyd edirik
+# Capture and write the Zen of Python message to output.txt
+
 
 def main():
-    # Capture stdout because 'import this' prints automatically to stdout when imported.
-    old_stdout = sys.stdout
-    sys.stdout = io.StringIO()
-    
-    import this
-    
-    zen = sys.stdout.getvalue()
-    sys.stdout = old_stdout
-    
-    with open("output.txt", "w") as out:
-        out.write(zen)
-        
-    print("Zen of Python captured and written to output.txt.")
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    output_path = os.path.join(script_dir, "output.txt")
 
-if __name__ == '__main__':
+    # Zen of Python idxal edərək mətni tuturuq
+    # Capture Zen of Python output by redirecting stdout temporarily
+    import io
+
+    old_stdout = sys.stdout
+    new_stdout = io.StringIO()
+    sys.stdout = new_stdout
+
+    import this
+
+    sys.stdout = old_stdout
+    zen_text = new_stdout.getvalue()
+
+    print(zen_text[:100] + "...")
+
+    # Nəticəni output.txt faylına yazırıq
+    # Write to output.txt
+    with open(output_path, "w") as f:
+        f.write(zen_text)
+
+
+if __name__ == "__main__":
     main()

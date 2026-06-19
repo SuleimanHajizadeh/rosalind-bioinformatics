@@ -1,13 +1,13 @@
-# rosalind_tran.py
 import os
 
-# 1. Faylın yerləşdiyi qovluğu tapırıq və FASTA faylını oxuyuruq
 script_dir = os.path.dirname(os.path.abspath(__file__))
 input_path = os.path.join(script_dir, "rosalind_tran.txt")
 
 sequences = []
 curr_seq = ""
 
+# 1. FASTA faylını oxuyuruq
+# Parse the FASTA file
 with open(input_path, "r") as file:
     for line in file:
         line = line.strip()
@@ -25,27 +25,34 @@ with open(input_path, "r") as file:
 s1 = sequences[0]
 s2 = sequences[1]
 
-# 2. Keçid (transition) və Transversiya (transversion) saylarını hesablayırıq
+# 2. Keçid (transition) və transversiya (transversion) saylarını hesablayırıq
+# Count transitions and transversions between two sequences of equal length
 transitions = 0
 transversions = 0
 
-# Keçid cütlüklərini müəyyən edirik: purinlər (A <-> G) və ya pirimidinlər (C <-> T)
-transition_pairs = {
-    ('A', 'G'), ('G', 'A'),
-    ('C', 'T'), ('T', 'C')
-}
+# Purin/Pirimidin keçidlərini müəyyən edən köməkçi çoxluqlar
+# Sets of purines and pyrimidines to classify substitutions
+purines = {"A", "G"}
+pyrimidines = {"C", "T"}
 
-for c1, c2 in zip(s1, s2):
-    if c1 != c2:
-        if (c1, c2) in transition_pairs:
+for x, y in zip(s1, s2):
+    if x != y:
+        # Eyni qrup daxilindəki əvəzlənmələr keçiddir (transition), müxtəlif qruplar arası transversiyadır (transversion)
+        # Transition: purine-purine or pyrimidine-pyrimidine. Transversion: purine-pyrimidine.
+        if (x in purines and y in purines) or (
+            x in pyrimidines and y in pyrimidines
+        ):
             transitions += 1
         else:
             transversions += 1
 
-# 3. Nisbəti tapırıq və nəticəni həm ekrana çıxarırıq, həm də output.txt faylına yazırıq
+# Nisbəti (ratio) hesablayırıq
+# Calculate transitions/transversions ratio
 ratio = transitions / transversions
-print(f"Keçid/Transversiya nisbəti: {ratio}")
+print(f"{ratio:.11f}")
 
+# 3. Nəticəni output.txt faylına yazırıq
+# Save the ratio to output.txt
 output_path = os.path.join(script_dir, "output.txt")
-with open(output_path, "w") as out_file:
-    out_file.write(str(ratio) + "\n")
+with open(output_path, "w") as output_file:
+    output_file.write(f"{ratio:.11f}\n")

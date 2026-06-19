@@ -1,51 +1,48 @@
 import os
-import glob
 
-def read_input():
-    script_dir = os.path.dirname(os.path.abspath(__file__))
-    txt_files = glob.glob(os.path.join(script_dir, "*.txt"))
-    # Filter out output.txt
-    txt_files = [f for f in txt_files if os.path.basename(f) != "output.txt"]
-    if not txt_files:
-        raise FileNotFoundError("Giriş faylı (*.txt) tapılmadı. Zəhmət olmasa Rosalind-dən yüklədiyiniz faylı bu qovluğa yerləşdirin.")
-    input_path = txt_files[0]
-    print(f"Giriş faylı oxunur: {os.path.basename(input_path)}")
-    with open(input_path, "r") as f:
-        lines = [line.strip() for line in f if line.strip()]
-    return lines
+# Təsadüfi RNT/DNT zəncirində verilmiş restriksiya ardıcıllığının tapılma sayının riyazi gözləməsini hesablayırıq
+# Compute the expected number of restriction sites in a random DNA string for given GC content values
+
 
 def main():
-    try:
-        lines = read_input()
-    except FileNotFoundError as e:
-        print(e)
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    input_path = os.path.join(script_dir, "rosalind_eval.txt")
+    output_path = os.path.join(script_dir, "output.txt")
+
+    if not os.path.exists(input_path):
+        print(f"Xəta: {input_path} tapılmadı.")
         return
-        
+
+    with open(input_path, "r") as f:
+        lines = [line.strip() for line in f if line.strip()]
+
     n = int(lines[0])
     s = lines[1]
-    A = list(map(float, lines[2].split()))
-    
-    L = len(s)
-    gc_count = s.count('G') + s.count('C')
-    at_count = s.count('A') + s.count('T')
-    
-    # Expected values
-    expected_values = []
-    for x in A:
-        p = ((x / 2.0) ** gc_count) * (((1.0 - x) / 2.0) ** at_count)
-        # Expected number of times s appears in t of length n
-        ev = (n - L + 1) * p
-        expected_values.append(f"{ev:.3f}")
-        
-    result_str = " ".join(expected_values)
-    print(f"n = {n}, s = {s}")
-    print(f"GC-kontentləri A = {A}")
-    print(f"Gözlənilən saylar = {result_str}")
-    
-    script_dir = os.path.dirname(os.path.abspath(__file__))
-    output_path = os.path.join(script_dir, "output.txt")
-    with open(output_path, "w") as out_file:
-        out_file.write(result_str + "\n")
+    a = list(map(float, lines[2].split()))
+
+    # Motifdəki GC və AT saylarını tapırıq
+    # Count frequencies of G/C and A/T in motif s
+    gc_count = s.count("G") + s.count("C")
+    at_count = s.count("A") + s.count("T")
+    motif_len = len(s)
+
+    results = []
+    for gc_val in a:
+        # Hər bir mövqe üçün uyğunluq ehtimalı
+        # Probability of matching single position
+        p_gc = gc_val / 2.0
+        p_at = (1.0 - gc_val) / 2.0
+        prob = (p_gc**gc_count) * (p_at**at_count)
+        # Gözlənilən restriksiya sayları (Expected values): (n - len(s) + 1) * prob
+        expected = (n - motif_len + 1) * prob
+        results.append(f"{expected:.3f}")
+
+    result_str = " ".join(results)
+    print(result_str)
+
+    with open(output_path, "w") as f:
+        f.write(result_str + "\n")
+
 
 if __name__ == "__main__":
     main()

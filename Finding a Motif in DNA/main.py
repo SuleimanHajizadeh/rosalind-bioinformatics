@@ -1,24 +1,22 @@
-# 1. Faylı oxuyuruq və sətirlərə parçalayırıq
+# 1. Giriş faylını oxuyuruq və sətirlərə parçalayırıq
+# Read DNA string and substring motif from the input file
 with open("rosalind_subs.txt", "r") as file:
     lines = file.read().splitlines()
 
-s = lines[0]  # Əsas DNT ardıcıllığı
-t = lines[1]  # Axtarılan motif (alt-ardıcıllıq)
+s = lines[0]
+t = lines[1]
 
 positions = []
-
-# 2. Dövr vasitəsilə sətir boyu hərəkət edirik
-# len(s) - len(t) + 1 fərqi axtarışın sətirdən kənara çıxmamasını təmin edir
+# 2. s sətri boyu sürüşərək t motifinin mövqelərini tapırıq
+# Scan s to locate all occurrences of motif t (1-based index)
 for i in range(len(s) - len(t) + 1):
-    # Əgər cari mövqedən başlayan hissə motifə bərabərdirsə
     if s[i:i+len(t)] == t:
-        # İndeksləmə 1-dən başladığı üçün i-nin üzərinə 1 gəlirik
         positions.append(i + 1)
 
-# 3. Mövqeləri aralarında boşluq olacaq şəkildə birləşdirib ekrana çıxarırıq
-result = " ".join(map(str, positions))
-print(result)
+result_str = " ".join(map(str, positions))
+print(result_str)
 
-# 4. Cavabı yeni bir fayla yazırıq
-with open("rosalind_subs_output.txt", "w") as output_file:
-    output_file.write(result)
+# 3. Mövqeləri output.txt faylına yazırıq
+# Write result coordinates to output.txt
+with open("output.txt", "w") as output_file:
+    output_file.write(result_str + "\n")

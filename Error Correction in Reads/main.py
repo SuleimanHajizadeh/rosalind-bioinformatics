@@ -1,69 +1,90 @@
-# rosalind_corr.py
 import os
 
-# 1. Tərs komplement (reverse complement) tapan köməkçi funksiya
-def reverse_complement(seq):
-    mapping = str.maketrans("ATCG", "TAGC")
-    return seq[::-1].translate(mapping)
+# FASTA formatlı giriş faylını oxuyuruq
+# Parse the FASTA file and load read sequences
 
-# 2. İki sətir arasındakı Hamming məsafəsini tapan funksiya
+
+def read_fasta(file_path):
+    seqs = []
+    curr = []
+    with open(file_path, "r") as f:
+        for line in f:
+            line = line.strip()
+            if line.startswith(">"):
+                if curr:
+                    seqs.append("".join(curr))
+                    curr = []
+            else:
+                curr.append(line)
+        if curr:
+            seqs.append("".join(curr))
+    return seqs
+
+
+def reverse_complement(s):
+    # Komplementar zənciri tapırıq
+    # Compute the reverse complement of DNA sequence
+    comp = {"A": "T", "T": "A", "C": "G", "G": "C"}
+    return "".join(comp[c] for c in reversed(s))
+
+
 def hamming_distance(s1, s2):
-    return sum(c1 != c2 for c1, c2 in zip(s1, s2))
+    # Hemminq məsafəsini (Hamming distance) hesablayırıq
+    # Calculate Hamming distance between two strings
+    return sum(1 for x, y in zip(s1, s2) if x != y)
 
-# 3. Giriş faylını oxuyuruq
-script_dir = os.path.dirname(os.path.abspath(__file__))
-input_path = os.path.join(script_dir, "rosalind_corr.txt")
 
-reads = []
-curr_seq = ""
+def main():
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    input_path = os.path.join(script_dir, "rosalind_corr.txt")
+    output_path = os.path.join(script_dir, "output.txt")
 
-with open(input_path, "r") as file:
-    for line in file:
-        line = line.strip()
-        if not line:
-            continue
-        if line.startswith(">"):
-            if curr_seq:
-                reads.append(curr_seq)
-                curr_seq = ""
-        else:
-            curr_seq += line
-    if curr_seq:
-        reads.append(curr_seq)
+    if not os.path.exists(input_path):
+        print(f"Xəta: {input_path} tapılmadı.")
+        return
 
-# 4. Hər bir oxunuşun (read) və onun tərs komplementinin ümumi sayını tapırıq
-counts = {}
-for r in reads:
-    counts[r] = counts.get(r, 0) + 1
+    reads = read_fasta(input_path)
 
-# Düzgün və səhv oxunuşları müəyyənləşdiririk
-correct_reads = set()
-for r in reads:
-    rev_r = reverse_complement(r)
-    # Əgər oxunuş və ya onun tərs komplementi cəmi 2 və ya daha çox sayda tapılıbsa, o düzgündür
-    if counts.get(r, 0) + counts.get(rev_r, 0) >= 2:
-        correct_reads.add(r)
-        correct_reads.add(rev_r)
+    # Tezlikləri hesablamaq üçün bütün oxunuşları və onların komplementlərini yoxlayırıq
+    # Count frequencies of each read including its reverse complement
+    counts = {}
+    for r in reads:
+        rc = reverse_complement(r)
+        # Hər bir oxunuş üçün normal və komplementar versiyasını eyni açara yığırıq
+        # Map read and its reverse complement to a canonical form (alphabetically smaller)
+        canonical = min(r, rc)
+        counts[canonical] = counts.get(canonical, 0) + 1
 
-# Səhv oxunuşlar (correct_reads çoxluğunda olmayanlar)
-incorrect_reads = []
-for r in reads:
-    if r not in correct_reads:
-        incorrect_reads.append(r)
+    # Düzgün və səhv oxunuşları ayırırıq
+    # Categorise reads into correct (freq >= 2) and incorrect (freq == 1)
+    correct_reads = set()
+    for r in reads:
+        rc = reverse_complement(r)
+        canonical = min(r, rc)
+        if counts[canonical] >= 2:
+            correct_reads.add(r)
+            correct_reads.add(rc)
 
-# 5. Səhv oxunuşları düzəldirik
-corrections = []
-for r in incorrect_reads:
-    # Səhv oxunuşun Hamming məsafəsi 1 olan düzgün oxunuşu (və ya onun tərs komplementini) tapırıq
-    for c in correct_reads:
-        if hamming_distance(r, c) == 1:
-            corrections.append(f"{r}->{c}")
-            break
+    incorrect_reads = []
+    for r in reads:
+        if r not in correct_reads:
+            incorrect_reads.append(r)
 
-# 6. Nəticələri ekrana çıxarırıq və output.txt faylına yazırıq
-output_content = "\n".join(corrections)
-print(output_content[:1000] + "\n...") # Çox böyük çıxışın qarşısını almaq üçün ekrana qısa yazdırırıq
+    corrections = []
+    # Hər bir səhv oxunuş üçün düzgün olanlar arasından 1 Hemminq məsafəsində olanı tapırıq
+    # For each incorrect read, find a matching correct read at Hamming distance == 1
+    for r in incorrect_reads:
+        for corr in correct_reads:
+            if hamming_distance(r, corr) == 1:
+                corrections.append(f"{r}->{corr}")
+                break
 
-output_path = os.path.join(script_dir, "output.txt")
-with open(output_path, "w") as out_file:
-    out_file.write(output_content + "\n")
+    with open(output_path, "w") as f:
+        for c in corrections:
+            f.write(c + "\n")
+
+    print(f"Total corrections: {len(corrections)}")
+
+
+if __name__ == "__main__":
+    main()

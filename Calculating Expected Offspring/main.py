@@ -1,18 +1,19 @@
-# rosalind_iev.py
-
 # 1. Fayldan 6 genotip cütlüyünün sayını oxuyuruq
+# Read counts of 6 genotype pairings from the input file
 with open("rosalind_iev.txt", "r") as file:
     counts = list(map(int, file.read().split()))
 
-# 2. Cütlüklər üzrə dominant uşaq sayının çəkiləri (weights)
-# Hər cütlüyün 2 uşağı olduğu üçün ehtimalları 2-yə vururuq: [2*1, 2*1, 2*1, 2*0.75, 2*0.5, 2*0]
+# 2. Cütlüklər üzrə dominant uşaq sayının çəkiləri
+# Weights of dominant offspring per pairing (multiplied by 2 as each pair has 2 offspring)
 weights = [2, 2, 2, 1.5, 1, 0]
 
-# 3. Hər bir cütlük sayını öz çəkisinə vurub toplayırıq (Expected Value)
-expected_offspring = sum(c * w for c, w in zip(counts, weights))
+# 3. Gözlənilən dominant uşaqların sayını hesablayırıq
+# Calculate total expected number of dominant offspring
+expected_dominant = sum(c * w for c, w in zip(counts, weights))
 
-# 4. Nəticəni ekrana çıxarırıq və yeni fayla yazırıq
-print(expected_offspring)
+print(expected_dominant)
 
-with open("rosalind_iev_output.txt", "w") as output_file:
-    output_file.write(str(expected_offspring))
+# 4. Nəticəni output.txt faylına yazırıq
+# Write the result to output.txt
+with open("output.txt", "w") as output_file:
+    output_file.write(str(expected_dominant) + "\n")

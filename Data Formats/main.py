@@ -2,94 +2,75 @@ import os
 import sys
 import urllib.request
 import urllib.parse
+from Bio import SeqIO
+from io import StringIO
+
+# NCBI GenBank bazasından ən qısa ardıcıllığı axtarıb tapırıq
+# Query NCBI database to fetch records and identify the shortest sequence
+
 
 def query_ncbi_fasta(ids):
-    """
-    Fetch FASTA records from NCBI Nucleotide database for a list of accession IDs.
-    """
     id_list = ",".join(ids)
-    params = urllib.parse.urlencode({
-        'db': 'nucleotide',
-        'id': id_list,
-        'rettype': 'fasta',
-        'retmode': 'text',
-        'tool': 'rosalind_solver',
-        'email': 'example@email.com'
-    })
-    url = f"https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?{params}"
-    print(f"Fetching: {url}")
-    
-    req = urllib.request.Request(
-        url,
-        headers={'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)'}
+    params = urllib.parse.urlencode(
+        {
+            "db": "nucleotide",
+            "id": id_list,
+            "rettype": "fasta",
+            "retmode": "text",
+            "tool": "rosalind_solver",
+            "email": "example@email.com",
+        }
     )
-    
-    with urllib.request.urlopen(req) as response:
-        return response.read().decode('utf-8')
+    url = f"https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?{params}"
+    try:
+        with urllib.request.urlopen(url) as response:
+            return response.read().decode("utf-8")
+    except Exception as e:
+        print(f"NCBI sorğu xətası: {e}")
+        return None
+
 
 def get_shortest_record(fasta_text):
-    """
-    Parses a FASTA multi-record string and returns the record with the shortest sequence.
-    """
-    parts = fasta_text.split('>')
-    shortest_record = None
-    shortest_len = float('inf')
-    
-    for part in parts:
-        if not part.strip():
-            continue
-        lines = part.strip().split('\n')
-        # Sequence lines are everything after the header line
-        seq = "".join(lines[1:]).replace(" ", "").replace("\r", "")
-        if len(seq) < shortest_len:
-            shortest_len = len(seq)
-            shortest_record = ">" + part.strip()
-            
-    return shortest_record
+    # Ən qısa ardıcıllığı tapırıq
+    # Parse records and return the record with the shortest sequence
+    records = list(SeqIO.parse(StringIO(fasta_text), "fasta"))
+    if not records:
+        return None
+    shortest = min(records, key=lambda r: len(r.seq))
+    return shortest
+
 
 def main():
-    # Discover input file
-    input_path = None
-    for fname in os.listdir('.'):
-        if fname.startswith('rosalind_') and fname.endswith('.txt'):
-            input_path = fname
-            break
-            
-    if input_path is None:
-        print("Error: No rosalind_*.txt dataset file found in the current directory.")
-        sys.exit(1)
-        
-    print(f"Reading from {input_path}")
-    with open(input_path, 'r') as f:
-        content = f.read()
-        
-    # Get all space-separated tokens/IDs
-    ids = [token.strip() for token in content.split() if token.strip()]
-    if not ids:
-        print("Error: No IDs found in the input file.")
-        sys.exit(1)
-        
-    print(f"Found {len(ids)} IDs: {ids}")
-    
-    # Query NCBI
-    try:
-        fasta_text = query_ncbi_fasta(ids)
-    except Exception as e:
-        print(f"Error querying NCBI: {e}")
-        sys.exit(1)
-        
-    # Find shortest record
-    shortest = get_shortest_record(fasta_text)
-    if shortest is None:
-        print("Error: Could not parse any valid records from NCBI response.")
-        sys.exit(1)
-        
-    # Write output
-    output_path = "output.txt"
-    with open(output_path, "w") as out:
-        out.write(shortest + "\n")
-        
-    print(f"Successfully wrote the shortest record to {output_path}")
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    input_path = os.path.join(script_dir, "rosalind_frmt.txt")
+    output_path = os.path.join(script_dir, "output.txt")
 
-if __name__ == '__main__':
+    if not os.path.exists(input_path):
+        print(f"Xəta: {input_path} tapılmadı.")
+        sys.exit(1)
+
+    with open(input_path, "r") as f:
+        ids = f.read().strip().split()
+
+    print(f"NCBI-dan {len(ids)} ID üçün məlumat yüklənir...")
+    fasta_text = query_ncbi_fasta(ids)
+    if not fasta_text:
+        print("Xəta: NCBI-dan məlumat alınmadı.")
+        sys.exit(1)
+
+    shortest = get_shortest_record(fasta_text)
+
+    # Nəticəni yazırıq
+    # Output and save shortest record details
+    header = f">{shortest.description}"
+    sequence = str(shortest.seq)
+
+    print(header)
+    print(sequence[:60] + "...")
+
+    with open(output_path, "w") as out:
+        out.write(f"{header}\n{sequence}\n")
+
+
+if __name__ == "__main__":
     main()

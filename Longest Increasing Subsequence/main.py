@@ -1,46 +1,86 @@
-import bisect
+import os
 
-def get_lis(seq):
-    n = len(seq)
+# Ən uzun artan (LIS) və azalan (LDS) alt-ardıcıllıqları tapırıq
+# Compute the Longest Increasing Subsequence (LIS) and Longest Decreasing Subsequence (LDS)
+
+
+def get_lis(arr):
+    # LIS tapmaq üçün dinamik proqramlaşdırma və ikilik axtarış (binary search)
+    # LIS algorithm using DP and binary search
+    n = len(arr)
     tails = []
+    parent = [-1] * n
     tails_indices = []
-    prev = [-1] * n
-    for i, x in enumerate(seq):
-        idx = bisect.bisect_left(tails, x)
-        if idx == len(tails):
+
+    for i, x in enumerate(arr):
+        # tails massivində x-in yerləşə biləcəyi mövqeyi tapırıq
+        # Binary search for position of x in tails
+        low, high = 0, len(tails) - 1
+        pos = len(tails)
+        while low <= high:
+            mid = (low + high) // 2
+            if tails[mid] >= x:
+                pos = mid
+                high = mid - 1
+            else:
+                low = mid + 1
+
+        if pos == len(tails):
             tails.append(x)
             tails_indices.append(i)
         else:
-            tails[idx] = x
-            tails_indices[idx] = i
-        if idx > 0:
-            prev[i] = tails_indices[idx - 1]
-    
-    # Ardıcıllığı bərpa edirik
+            tails[pos] = x
+            tails_indices[pos] = i
+
+        if pos > 0:
+            parent[i] = tails_indices[pos - 1]
+
+    # Geri izləmə ilə ardıcıllığı qururuq
+    # Reconstruct LIS sequence via backtracking
     curr = tails_indices[-1]
-    res = []
+    subseq = []
     while curr != -1:
-        res.append(seq[curr])
-        curr = prev[curr]
-    return res[::-1]
+        subseq.append(arr[curr])
+        curr = parent[curr]
+    subseq.reverse()
+    return subseq
 
-# Faylı düzgün oxumaq üçün mütləq faylın tam yolunu istifadə et
-file_path = "/Users/macbookairm2/Documents/GitHub/rosalind-bioinformatics/Longest Increasing Subsequence/rosalind_lgis.txt"
 
-with open(file_path, "r") as f:
-    lines = f.readlines()
-    pi = []
-    for line in lines[1:]:
-        pi.extend(map(int, line.split()))
+def main():
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    input_path = os.path.join(script_dir, "rosalind_lgis.txt")
+    output_path = os.path.join(script_dir, "output.txt")
 
-# LIS və LDS hesablayırıq
-lis = get_lis(pi)
-lds = get_lis([-x for x in pi]) # LDS üçün mənfi işarə ilə LIS
-lds = [-x for x in lds]
+    if not os.path.exists(input_path):
+        print(f"Xəta: {input_path} tapılmadı.")
+        return
 
-# Nəticəni fayla yazaq (formatı yoxlamaq üçün)
-with open("output.txt", "w") as out:
-    out.write(" ".join(map(str, lis)) + "\n")
-    out.write(" ".join(map(str, lds)) + "\n")
+    with open(input_path, "r") as f:
+        lines = f.read().splitlines()
 
-print("İşləndi! 'output.txt' faylına bax.")
+    n = int(lines[0].strip())
+    arr = list(map(int, lines[1].split()))
+
+    # LIS hesablayırıq
+    # Compute LIS
+    lis = get_lis(arr)
+
+    # LDS tapmaq üçün elementləri mənfiləşdirib LIS tətbiq edirik
+    # Compute LDS by negating elements and running LIS algorithm
+    neg_arr = [-x for x in arr]
+    lds_neg = get_lis(neg_arr)
+    lds = [-x for x in lds_neg]
+
+    lis_str = " ".join(map(str, lis))
+    lds_str = " ".join(map(str, lds))
+
+    print(lis_str)
+    print(lds_str)
+
+    with open(output_path, "w") as f:
+        f.write(lis_str + "\n")
+        f.write(lds_str + "\n")
+
+
+if __name__ == "__main__":
+    main()

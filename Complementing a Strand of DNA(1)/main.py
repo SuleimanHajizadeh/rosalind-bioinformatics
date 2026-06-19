@@ -1,47 +1,45 @@
 import os
 import glob
-from Bio.SeqIO import parse
-from Bio.Seq import Seq
+from Bio import SeqIO
+from io import StringIO
+
+# Hər bir FASTA ardıcıllığının tərsinə çevrilmiş tamamlayıcısını tapıb
+# öz-özünə tamamlayan ardıcıllıqları sayırıq
+# Count DNA strings equal to their own reverse complement
 
 
-def solve(input_text: str) -> str:
-    from io import StringIO
+def solve(input_text):
     count = 0
-    for record in parse(StringIO(input_text), 'fasta'):
+    # FASTA formatında ardıcıllıqları oxuyuruq
+    # Parse FASTA sequences
+    for record in SeqIO.parse(StringIO(input_text), 'fasta'):
         seq = record.seq
+        # Tərsinə çevrilmiş tamamlayıcı özünə bərabərdirsə sayı artırırıq
+        # If the sequence equals its own reverse complement, count it
         if seq == seq.reverse_complement():
             count += 1
     return str(count)
 
 
 def main():
-    dataset_files = glob.glob(os.path.join(os.path.dirname(__file__), 'rosalind_*.txt'))
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    dataset_files = glob.glob(os.path.join(script_dir, 'rosalind_*.txt'))
 
     if not dataset_files:
-        print("Error: No rosalind_*.txt dataset file found in the current directory.")
+        print("Xəta: fayl tapılmadı.")
         return
 
-    dataset_file = dataset_files[0]
-    print(f"Using dataset: {dataset_file}")
-
-    with open(dataset_file, 'r') as f:
+    with open(dataset_files[0], 'r') as f:
         input_text = f.read()
 
     result = solve(input_text)
-    print(f"Result: {result}")
 
-    output_file = os.path.join(os.path.dirname(__file__), 'output.txt')
+    # Nəticəni output.txt-ə yazırıq
+    # Write result to output.txt
+    output_file = os.path.join(script_dir, 'output.txt')
     with open(output_file, 'w') as f:
         f.write(result + '\n')
-    print(f"Output written to: {output_file}")
 
 
 if __name__ == '__main__':
-    # Verify with sample
-    sample = """>Rosalind_64
-ATAT
->Rosalind_48
-GCATA"""
-    print(f"Sample result: {solve(sample)} (expected: 1)")
-
     main()

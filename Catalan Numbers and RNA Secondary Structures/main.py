@@ -1,67 +1,59 @@
-# rosalind_cat.py
 import os
 import sys
 
-# Rekursiya limitini artırırıq ki, uzun sətirlərdə problem olmasın
+# Rekursiya limitini artırırıq
+# Increase recursion limit for processing longer sequences
 sys.setrecursionlimit(2000)
 
-# 1. Faylın yerləşdiyi qovluğu tapırıq və FASTA faylını oxuyuruq
 script_dir = os.path.dirname(os.path.abspath(__file__))
 input_path = os.path.join(script_dir, "rosalind_cat.txt")
 
-rna_seq = ""
+# 1. FASTA faylını oxuyuruq
+# Read and parse the FASTA file
 with open(input_path, "r") as file:
-    for line in file:
-        line = line.strip()
-        if not line.startswith(">"):
-            rna_seq += line
+    lines = file.read().splitlines()
 
-# 2. Dinamik Proqramlaşdırma (DP) üçün memoization lüğəti (cache)
+seq = ""
+for line in lines:
+    if not line.startswith(">"):
+        seq += line
+
+# Komplementar cütləri yoxlamaq üçün funksiya
+# Helper function to check base-pairing compatibility
+def is_complement(a, b):
+    return (a == 'A' and b == 'U') or (a == 'U' and b == 'A') or \
+           (a == 'C' and b == 'G') or (a == 'G' and b == 'C')
+
 memo = {}
 
-# Komplementar cütlükləri təyin edirik
-complements = {
-    'A': 'U', 'U': 'A',
-    'C': 'G', 'G': 'C'
-}
-
-def count_noncrossing_matchings(s):
-    # Əgər sətir boşdursa, 1 mükəmməl uyğunlaşma var (baza halı)
-    if not s:
+# Catalan nömrələrini hesablamaq üçün rekursiv funksiya
+# Recursive function with memoization to compute Catalan numbers for RNA structures
+def catalan(s):
+    if len(s) == 0:
         return 1
-    # Əgər sətir tək sayda nukleotiddən ibarətdirsə, mükəmməl uyğunlaşma mümkün deyil
-    if len(s) % 2 != 0:
-        return 0
-    # Əgər bu alt-sətir artıq hesablanıbsa, cache-dən götürürük
     if s in memo:
         return memo[s]
     
     total = 0
-    first_char = s[0]
-    
-    # Birinci nukleotidi (s[0]) digər cütləşə biləcək s[k] ilə cütləşdiririk.
-    # Qrafın kəsişməməsi üçün k mütləq tək ədəd (odd index) olmalıdır.
-    for k in range(1, len(s), 2):
-        if s[k] == complements.get(first_char, ''):
-            # Cütləşmə {0, k} qrafı iki hissəyə ayırır:
-            # 1. Daxili hissə (inner): s[1:k]
-            # 2. Xarici hissə (outer): s[k+1:]
-            # Hər iki hissənin müstəqil şəkildə mükəmməl uyğunlaşma saylarının hasilini tapırıq
-            inner_ways = count_noncrossing_matchings(s[1:k])
-            outer_ways = count_noncrossing_matchings(s[k+1:])
-            
-            # Ümumi sayı toplayırıq (mod 1,000,000 ilə)
-            total = (total + (inner_ways * outer_ways)) % 1000000
-            
+    # Düzgün cütləşmələri yoxlayaraq alt strukturlara bölürük
+    # Split the sequence at compatible base pairings and multiply subproblem counts
+    for i in range(1, len(s), 2):
+        if is_complement(s[0], s[i]):
+            left_seq = s[1:i]
+            # U və A/G/C saylarının eyni olub-olmadığını yoxlayırıq (sürətləndirmək üçün)
+            # Verify if subproblems can have matching base counts
+            if (left_seq.count('A') + left_seq.count('C') == 
+                left_seq.count('U') + left_seq.count('G')):
+                total = (total + catalan(left_seq) * catalan(s[i+1:])) % 1000000
+                
     memo[s] = total
     return total
 
-# 3. Hesablamanı aparırıq
-result = count_noncrossing_matchings(rna_seq)
+result = catalan(seq)
+print(result)
 
-# 4. Nəticəni həm ekrana çıxarırıq, həm də output.txt faylına yazırıq
-print(f"Kəsişməyən mükəmməl cütləşmələrin sayı (% 1,000,000): {result}")
-
+# Nəticəni output.txt faylına yazırıq
+# Write result to output.txt
 output_path = os.path.join(script_dir, "output.txt")
-with open(output_path, "w") as out_file:
-    out_file.write(str(result) + "\n")
+with open(output_path, "w") as output_file:
+    output_file.write(str(result) + "\n")

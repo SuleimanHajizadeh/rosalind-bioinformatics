@@ -1,133 +1,131 @@
 import os
-from collections import deque
+import sys
 
-def tokenize(s):
-    tokens = []
-    i = 0
-    while i < len(s):
-        if s[i] in '(),;':
-            tokens.append(s[i])
-            i += 1
-        else:
-            # Read name
-            start = i
-            while i < len(s) and s[i] not in '(),;':
-                i += 1
-            name = s[start:i].strip()
-            if name:
-                tokens.append(name)
-    return tokens
+# Newick ağacının düyününü təmsil edən sinif
+# Node class for representing Newick tree hierarchy
+
+
+class Node:
+    def __init__(self, name=None):
+        self.name = name
+        self.children = []
+
 
 def parse_newick(s):
-    tokens = tokenize(s)
+    # Newick sətirini obyekt strukturuna çeviririk
+    # Parse Newick string format to node objects
+    s = s.strip()
+    if s.endswith(";"):
+        s = s[:-1]
+
     stack = []
-    adj = {}
-    dummy_count = 0
-    
-    def get_dummy():
-        nonlocal dummy_count
-        dummy_count += 1
-        return f"__dummy_{dummy_count}__"
-        
-    def add_edge(u, v):
-        if u not in adj: adj[u] = []
-        if v not in adj: adj[v] = []
-        adj[u].append(v)
-        adj[v].append(u)
-        
+    root = Node()
+    curr = root
     i = 0
-    current_children = []
-    while i < len(tokens):
-        tok = tokens[i]
-        if tok == '(':
-            stack.append(current_children)
-            current_children = []
+    n = len(s)
+    # Ağac düyünlərini gəzirik
+    # Traverse tree nodes
+    while i < n:
+        c = s[i]
+        if c == "(":
+            new_node = Node()
+            curr.children.append(new_node)
+            stack.append(curr)
+            curr = new_node
             i += 1
-        elif tok == ',':
+        elif c == ",":
+            parent = stack[-1]
+            new_node = Node()
+            parent.children.append(new_node)
+            curr = new_node
             i += 1
-        elif tok == ')':
-            parent = None
-            if i + 1 < len(tokens) and tokens[i+1] not in '(),;':
-                parent = tokens[i+1]
-                i += 2
-            else:
-                parent = get_dummy()
-                i += 1
-            
-            for child in current_children:
-                add_edge(parent, child)
-                
-            if stack:
-                prev_children = stack.pop()
-                prev_children.append(parent)
-                current_children = prev_children
-            else:
-                current_children = [parent]
-        elif tok == ';':
+        elif c == ")":
+            curr = stack.pop()
             i += 1
         else:
-            current_children.append(tok)
-            i += 1
-            
+            name_chars = []
+            while i < n and s[i] not in "(),;":
+                name_chars.append(s[i])
+                i += 1
+            name = "".join(name_chars).strip()
+            if name:
+                curr.name = name
+    return root
+
+
+def build_adjacency_list(root):
+    # Ağacdan adj (qonşuluq siyahısı) matrisini qururuq
+    # Build bidirectional adjacency list from tree nodes representation
+    adj = {}
+
+    def dfs(node):
+        if node.name:
+            adj.setdefault(node.name, [])
+        for child in node.children:
+            if child.name:
+                adj.setdefault(child.name, [])
+            # Düyünləri qarşılıqlı birləşdiririk
+            # Connect parent and child nodes
+            if node.name and child.name:
+                adj[node.name].append(child.name)
+                adj[child.name].append(node.name)
+            dfs(child)
+
+    dfs(root)
     return adj
 
-def bfs_distance(adj, start, target):
-    if start == target:
+
+def find_distance(adj, u, v):
+    # BFS vasitəsilə iki düyün arasındakı ən qısa məsafəni tapırıq
+    # Find shortest distance between u and v using BFS
+    if u == v:
         return 0
-    queue = deque([(start, 0)])
-    visited = {start}
-    while queue:
-        curr, dist = queue.popleft()
-        if curr == target:
-            return dist
-        for neighbor in adj.get(curr, []):
-            if neighbor not in visited:
-                visited.add(neighbor)
-                queue.append((neighbor, dist + 1))
+    q = [(u, 0)]
+    visited = {u}
+    while q:
+        curr, dist = q.pop(0)
+        for nxt in adj.get(curr, []):
+            if nxt == v:
+                return dist + 1
+            if nxt not in visited:
+                visited.add(nxt)
+                q.append((nxt, dist + 1))
     return -1
 
-def read_input(file_path):
-    trees_and_pairs = []
-    with open(file_path, "r") as f:
-        lines = [line.strip() for line in f]
-    
-    i = 0
-    while i < len(lines):
-        while i < len(lines) and not lines[i]:
-            i += 1
-        if i >= len(lines):
-            break
-        tree_str = lines[i]
-        i += 1
-        while i < len(lines) and not lines[i]:
-            i += 1
-        if i >= len(lines):
-            break
-        nodes = lines[i].split()
-        i += 1
-        if len(nodes) == 2:
-            trees_and_pairs.append((tree_str, nodes[0], nodes[1]))
-    return trees_and_pairs
 
 def main():
     script_dir = os.path.dirname(os.path.abspath(__file__))
-    input_path = os.path.join(script_dir, "rosalind_nwck.txt")
-    
-    pairs = read_input(input_path)
-    distances = []
-    
-    for idx, (tree_str, x, y) in enumerate(pairs, 1):
-        adj = parse_newick(tree_str)
-        dist = bfs_distance(adj, x, y)
-        print(f"Ağac {idx}: {x} - {y} məsafəsi = {dist}")
-        distances.append(dist)
-        
-    result_str = " ".join(map(str, distances))
-    print(f"Yekun nəticə: {result_str}")
-    
+    input_path = os.path.join(script_dir, "rosalind_nkew.txt")
     output_path = os.path.join(script_dir, "output.txt")
-    with open(output_path, "w") as out_file:
-        out_file.write(result_str + "\n")
+
+    if not os.path.exists(input_path):
+        print(f"Xəta: {input_path} tapılmadı.")
+        sys.exit(1)
+
+    with open(input_path, "r") as f:
+        content = f.read().strip()
+
+    blocks = content.split("\n\n")
+    results = []
+
+    for block in blocks:
+        lines = [line.strip() for line in block.split("\n") if line.strip()]
+        if len(lines) < 2:
+            continue
+        tree_str = lines[0]
+        u, v = lines[1].split()
+
+        root = parse_newick(tree_str)
+        adj = build_adjacency_list(root)
+        dist = find_distance(adj, u, v)
+        results.append(dist)
+
+    result_str = " ".join(map(str, results))
+    print(result_str)
+
+    with open(output_path, "w") as f:
+        f.write(result_str + "\n")
+
 
 if __name__ == "__main__":
     main()

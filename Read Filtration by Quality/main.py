@@ -1,80 +1,64 @@
 import os
 import glob
+from Bio import SeqIO
+from io import StringIO
+
+# FASTQ oxunuşlarından keyfiyyəti az olanları filtirləyirik
+# Filter FASTQ reads: keep only reads where >= p% of bases have quality >= q
 
 
-def solve(input_text: str) -> str:
+def solve(input_text):
     lines = input_text.strip().split('\n')
-    
-    # First line: quality threshold q and percentage p
+
+    # İlk sətirdə q (keyfiyyət hədd) və p (faiz hədd) verilir
+    # First line contains quality threshold q and percentage threshold p
     q, p = map(int, lines[0].split())
-    
-    # Parse FASTQ records (4 lines each after the first line)
+
     count = 0
     i = 1
     while i < len(lines):
-        # Each FASTQ record: @ID, sequence, +, quality
+        # Hər FASTQ qeydi 4 sətirdən ibarətdir: başlıq, ardıcıllıq, +, keyfiyyət
+        # Each FASTQ record is 4 lines: header, sequence, +, quality
         if lines[i].startswith('@'):
-            # sequence = lines[i + 1]
             quality_str = lines[i + 3]
-            
-            # Decode Phred quality scores (Sanger encoding: Q + 33)
+            # Phred33 keyfiyyət skorlarını hesablayırıq
+            # Decode Phred33 quality scores
             quality_scores = [ord(c) - 33 for c in quality_str]
-            
-            total_bases = len(quality_scores)
-            if total_bases == 0:
+            total = len(quality_scores)
+            if total == 0:
                 i += 4
                 continue
-            
-            high_quality = sum(1 for score in quality_scores if score >= q)
-            percentage = (high_quality / total_bases) * 100
-            
-            if percentage >= p:
+            # q-dan böyük və ya bərabər olan bazaların faizini hesablayırıq
+            # Calculate percentage of bases meeting the quality threshold
+            high_q = sum(1 for s in quality_scores if s >= q)
+            if (high_q / total) * 100 >= p:
                 count += 1
-            
             i += 4
         else:
             i += 1
-    
+
     return str(count)
 
 
 def main():
-    # Find the dataset file
-    dataset_files = glob.glob(os.path.join(os.path.dirname(__file__), 'rosalind_*.txt'))
-    
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    dataset_files = glob.glob(os.path.join(script_dir, 'rosalind_*.txt'))
+
     if not dataset_files:
-        print("Error: No rosalind_*.txt dataset file found in the current directory.")
+        print("Xəta: fayl tapılmadı.")
         return
-    
-    dataset_file = dataset_files[0]
-    print(f"Using dataset: {dataset_file}")
-    
-    with open(dataset_file, 'r') as f:
+
+    with open(dataset_files[0], 'r') as f:
         input_text = f.read()
-    
+
     result = solve(input_text)
-    print(f"Result: {result}")
-    
+
+    # Nəticəni output.txt-ə yazırıq
     # Write result to output.txt
-    output_file = os.path.join(os.path.dirname(__file__), 'output.txt')
+    output_file = os.path.join(script_dir, 'output.txt')
     with open(output_file, 'w') as f:
         f.write(result + '\n')
-    print(f"Output written to: {output_file}")
 
 
 if __name__ == '__main__':
-    # Quick verification with sample data from the problem
-    sample = """20 90
-@Rosalind_0049_1
-GCAGAGACCAGTAGATGTGTTTGCGGACGGTCGGGCTCCATGTGACACAG
-+
-FD@@;C<AI?4BA:=>C<G=:AE=><A??>764A8B797@A:58:527+,
-@Rosalind_0049_2
-AAGCGACGGGGCTTCACATCAGCJTTGACCGCCTATAATAATGATCATGC
-+
-=1:>>LA?F8:C:N?LA:=:>BI@<C;N:@;JFCI:N>=C?=;:LB?DD"""
-    
-    sample_result = solve(sample)
-    print(f"Sample result: {sample_result} (expected: 1)")
-    
     main()

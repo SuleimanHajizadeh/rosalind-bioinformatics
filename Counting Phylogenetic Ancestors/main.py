@@ -1,25 +1,20 @@
-# rosalind_inod.py
 import os
 
-# 1. Faylın yerləşdiyi qovluğu tapırıq və n (yarpaq sayını) oxuyuruq
 script_dir = os.path.dirname(os.path.abspath(__file__))
 input_path = os.path.join(script_dir, "rosalind_inod.txt")
 
+# 1. Giriş faylından n (yarpaq sayını) oxuyuruq
+# Read n (leaf nodes count) from the dataset
 with open(input_path, "r") as file:
     n = int(file.read().strip())
 
-# 2. Köksüz binar ağacda daxili təpələrin (internal nodes) sayını tapırıq
-# Yarpaqların sayı n olarsa, daxili təpələrin sayı həmişə: I = n - 2 olur.
-# İsbatı:
-# Təpələrin cəmi: V = n + I
-# Tillərin cəmi: E = V - 1 = n + I - 1
-# Qraf xassəsinə görə dərəcələrin cəmi 2E-yə bərabərdir: n * 1 + I * 3 = 2 * (n + I - 1)
-# n + 3I = 2n + 2I - 2  =>  I = n - 2
-result = n - 2
+# 2. Köksüz binar ağacda daxili düyünlərin (internal nodes) sayını hesablayırıq
+# In an unrooted binary tree, internal nodes count = n - 2
+internal_nodes = n - 2
+print(internal_nodes)
 
-# 3. Nəticəni həm ekrana çıxarırıq, həm də output.txt faylına yazırıq
-print(f"Daxili təpələrin sayı (n={n}): {result}")
-
+# 3. Nəticəni output.txt faylına yazırıq
+# Write result to output.txt
 output_path = os.path.join(script_dir, "output.txt")
-with open(output_path, "w") as out_file:
-    out_file.write(str(result) + "\n")
+with open(output_path, "w") as output_file:
+    output_file.write(str(internal_nodes) + "\n")

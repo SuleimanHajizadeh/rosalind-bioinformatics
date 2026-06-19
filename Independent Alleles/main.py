@@ -1,31 +1,37 @@
-# rosalind_lia.py
+# 1. Giriş faylından k (nəsil sayı) və n (ən azı bu qədər AaBb fərdi olması həddi) oxuyuruq
+# Read generation k and threshold n from the dataset file
+with open("rosalind_lia.txt", "r") as file:
+    line = file.read().strip()
+    parts = line.split()
+    k = int(parts[0])
+    n = int(parts[1])
+
+# 2. k-cı nəsildə fərdlərin ümumi sayını hesablayırıq: 2^k
+# Total offspring in the k-th generation is 2^k
+total_population = 2**k
+
+# Hər fərdin AaBb genotipinə sahib olma ehtimalı p = 0.25 (Aa x AaBb və Bb x AaBb cütləşməsinə görə)
+# Probability of AaBb genotype for any offspring is p = 0.25
+p_AaBb = 0.25
+
+# 3. Binomial paylanma vasitəsilə ehtimalı hesablayırıq
+# Calculate the probability of having at least n AaBb individuals using binomial probability
 import math
 
-# 1. Fayldan k (nəsil) və n (ən azı tələb olunan fərd sayı) qiymətlərini oxuyuruq
-with open("rosalind_lia.txt", "r") as file:
-    k, n = map(int, file.read().split())
+# Ən azı n fərd olması ehtimalı = 1 - (n-dən az AaBb olması ehtimalı)
+# Probability(at least n) = 1 - sum(Probability(i) for i in range(n))
+prob_less_than_n = 0.0
+for i in range(n):
+    # C(total, i) * p^i * (1-p)^(total - i)
+    combinations = math.comb(total_population, i)
+    prob_i = combinations * (p_AaBb**i) * ((1 - p_AaBb)**(total_population - i))
+    prob_less_than_n += prob_i
 
-def independent_alleles(k, n):
-    # k-cı nəsildəki toplam uşaq sayı
-    total_organisms = 2 ** k
-    p = 0.25 # Hər bir uşağın Aa Bb olma ehtimalı
-    
-    # Ən azı n fərd tapmaq ehtimalını hesablamaq üçün, 
-    # əvvəlcə uşaq sayının n-dən AZ (0-dan n-1-ə qədər) olma ehtimalını tapıb 1-dən çıxırıq
-    prob_less_than_n = 0
-    for i in range(n):
-        combinations = math.comb(total_organisms, i)
-        prob_less_than_n += combinations * (p ** i) * ((1 - p) ** (total_organisms - i))
-        
-    prob_at_least_n = 1 - prob_less_than_n
-    
-    # Rosalind cavabı adətən 3 onluq kəsr dəqiqliyi ilə istəyir
-    return round(prob_at_least_n, 3)
+probability = 1.0 - prob_less_than_n
+result_str = f"{probability:.3f}"
+print(result_str)
 
-# 2. Nəticəni hesablayırıq və yazdırırıq
-result = independent_alleles(k, n)
-print(result)
-
-# 3. Cavabı yeni bir çıxış faylına yazırıq
-with open("rosalind_lia_output.txt", "w") as output_file:
-    output_file.write(str(result))
+# 4. Nəticəni output.txt faylına yazırıq
+# Write result probability to output.txt
+with open("output.txt", "w") as output_file:
+    output_file.write(result_str + "\n")

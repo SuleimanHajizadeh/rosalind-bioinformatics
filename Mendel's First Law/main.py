@@ -1,32 +1,37 @@
-# 1. Fayldan k, m, n qiymətlərini oxuyuruq
+# 1. Giriş faylından dominant (k), heterozigot (m) və resessiv (n) fərdlərin sayını oxuyuruq
+# Read counts of homozygous dominant (k), heterozygous (m), and homozygous recessive (n)
 with open("rosalind_iprb.txt", "r") as file:
     k, m, n = map(int, file.read().split())
 
-# Toplam fərdlərin sayı
+# Ümumi populyasiya sayı
+# Total population size
 total = k + m + n
 
-# Seçilə biləcək bütün mümkün cütlüklərin sayı
+# 2. Resessiv fenotipə malik uşaq yaranma ehtimalını (prob_recessive) hesablayırıq
+# Compute the probability of producing an offspring with homozygous recessive genotype
+# Çünki bu ehtimalı tapıb 1-dən çıxmaq dominant fenotipi tapmağın ən asan yoludur
+# Calculate probability of recessive outcome and subtract from 1 to get dominant probability
 total_pairs = total * (total - 1)
 
-# Resessiv (aa) nəsil verə biləcək cütlüklərin ehtimalları:
-# aa x aa -> 100% resessiv nəsil yaradır (1.0)
-prob_aa_aa = (n * (n - 1)) / total_pairs * 1.0
+# İki resessiv fərdin cütləşməsi ehtimalı: n/total * (n-1)/(total-1) -> Uşaq 100% resessiv olur (1.0)
+prob_n_n = (n * (n - 1)) / total_pairs
 
-# Aa x aa və ya aa x Aa -> 50% resessiv nəsil yaradır (0.5)
-prob_Aa_aa = (m * n + n * m) / total_pairs * 0.5
+# İki heterozigot fərdin cütləşməsi ehtimalı: m/total * (m-1)/(total-1) -> Uşaq 25% resessiv olur (0.25)
+prob_m_m = (m * (m - 1)) / total_pairs * 0.25
 
-# Aa x Aa -> 25% resessiv nəsil yaradır (0.25)
-prob_Aa_Aa = (m * (m - 1)) / total_pairs * 0.25
+# Bir heterozigot və bir resessiv fərdin cütləşməsi ehtimalı:
+# 2 * (m/total * n/(total-1)) -> Uşaq 50% resessiv olur (0.5)
+prob_m_n = (2 * m * n) / total_pairs * 0.5
 
-# Toplam resessiv nəsil ehtimalı
-prob_recessive = prob_aa_aa + prob_Aa_aa + prob_Aa_Aa
+prob_recessive = prob_n_n + prob_m_m + prob_m_n
 
-# Dominant fenotip ehtimalı = 1 - resessiv ehtimalı
+# Dominant fenotip ehtimalı: 1 - resessiv fenotip ehtimalı
+# Probability of dominant phenotype = 1 - prob_recessive
 prob_dominant = 1 - prob_recessive
-
-# 2. Nəticəni ekrana çıxarırıq (Rosalind 5 nöqtədən sonra 5 rəqəm qəbul edir)
-print(f"{prob_dominant:.5f}")
+result_str = f"{prob_dominant:.5f}"
+print(result_str)
 
 # 3. Cavabı yeni fayla qeyd edirik
-with open("rosalind_iprb_output.txt", "w") as output_file:
-    output_file.write(f"{prob_dominant:.5f}")
+# Write result to output.txt
+with open("output.txt", "w") as output_file:
+    output_file.write(result_str + "\n")

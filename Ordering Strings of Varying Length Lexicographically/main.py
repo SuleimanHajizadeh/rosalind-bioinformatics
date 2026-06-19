@@ -1,57 +1,45 @@
 import os
-import glob
+import itertools
 
-def read_input():
-    script_dir = os.path.dirname(os.path.abspath(__file__))
-    txt_files = glob.glob(os.path.join(script_dir, "*.txt"))
-    # Filter out output.txt
-    txt_files = [f for f in txt_files if os.path.basename(f) != "output.txt"]
-    if not txt_files:
-        raise FileNotFoundError("Giriş faylı (*.txt) tapılmadı. Zəhmət olmasa Rosalind-dən yüklədiyiniz faylı bu qovluğa yerləşdirin.")
-    input_path = txt_files[0]
-    print(f"Giriş faylı oxunur: {os.path.basename(input_path)}")
-    with open(input_path, "r") as f:
-        lines = [line.strip() for line in f if line.strip()]
-    return lines
+# Müxtəlif uzunluqlu sətirləri leksikoqrafik ardıcıllıqla generasiya edirik
+# Generate all strings of length up to n from an alphabet lexicographically
 
-def generate_lexv(alphabet, n):
-    results = []
-    
-    def dfs(current_str):
-        if len(current_str) > 0:
-            results.append(current_str)
-        if len(current_str) < n:
-            for char in alphabet:
-                dfs(current_str + char)
-                
-    dfs("")
-    return results
 
 def main():
-    try:
-        lines = read_input()
-    except FileNotFoundError as e:
-        print(e)
-        return
-        
-    alphabet = lines[0].split()
-    n = int(lines[1])
-    
-    print(f"Əlifba: {alphabet}, Maksimal uzunluq n = {n}")
-    
-    results = generate_lexv(alphabet, n)
-    
     script_dir = os.path.dirname(os.path.abspath(__file__))
+    input_path = os.path.join(script_dir, "rosalind_lexv.txt")
     output_path = os.path.join(script_dir, "output.txt")
-    
-    with open(output_path, "w") as out_file:
+
+    if not os.path.exists(input_path):
+        print(f"Xəta: {input_path} tapılmadı.")
+        return
+
+    with open(input_path, "r") as f:
+        lines = f.read().splitlines()
+
+    alphabet = lines[0].split()
+    n = int(lines[1].strip())
+
+    results = []
+
+    # Leksikoqrafik sıranı müəyyən etmək üçün reytinq funksiyası yazırıq
+    # Recursively generate strings to match the lexicographical order of the given alphabet
+    def generate(curr):
+        if len(curr) > 0:
+            results.append("".join(curr))
+        if len(curr) == n:
+            return
+        for char in alphabet:
+            generate(curr + [char])
+
+    generate([])
+
+    with open(output_path, "w") as f:
         for item in results:
-            out_file.write(item + "\n")
-            
-    print(f"Uğurla tamamlandı! Ümumi sətir sayı: {len(results)}")
-    print("İlk 10 nəticə:")
-    for item in results[:10]:
-        print(item)
+            f.write(item + "\n")
+
+    print(f"Generated {len(results)} strings.")
+
 
 if __name__ == "__main__":
     main()

@@ -1,62 +1,74 @@
-# rosalind_lcsm.py
+import os
 
-def read_fasta(filename):
-    """FASTA formatlı faylı oxuyub sətirlər siyahısı qaytaran funksiya"""
+# FASTA formatlı giriş faylını oxuyuruq
+# Parse the FASTA file to load DNA sequences
+
+
+def read_fasta(file_path):
     sequences = []
-    current_seq = ""
-    with open(filename, "r") as file:
-        for line in file:
+    current_seq = []
+    with open(file_path, "r") as f:
+        for line in f:
             line = line.strip()
             if line.startswith(">"):
                 if current_seq:
-                    sequences.append(current_seq)
-                    current_seq = ""
+                    sequences.append("".join(current_seq))
+                    current_seq = []
             else:
-                current_seq += line
+                current_seq.append(line)
         if current_seq:
-            sequences.append(current_seq)
+            sequences.append("".join(current_seq))
     return sequences
 
-def longest_common_substring(filename):
-    sequences = read_fasta(filename)
-    if not sequences:
-        return ""
-        
-    # Ən qısa sətiri tapırıq, çünki ortaq alt-ardıcıllıq ondan uzun ola bilməz
-    sequences.sort(key=len)
-    shortest = sequences[0]
-    other_seqs = sequences[1:]
-    
-    # Alt-ardıcıllığın uzunluğu üzərində İkili Axtarış (Binary Search)
+
+def longest_common_substring(sequences):
+    # Ən qısa ardıcıllığı seçib onun bütün alt sətirlərini yoxlayırıq
+    # Select the shortest sequence as candidate to search for substrings
+    shortest_seq = min(sequences, key=len)
+    n = len(shortest_seq)
+    lcs = ""
+
+    # İkilik axtarış (binary search) ilə ən uzun ortaq alt sətri (LCS) tapırıq
+    # Binary search on length of longest common substring
     low = 1
-    high = len(shortest)
-    best_lcs = ""
-    
+    high = n
+
     while low <= high:
         mid = (low + high) // 2
         found = False
-        
-        # 'mid' uzunluğundakı bütün alt-ardıcıllıqları yoxlayırıq
-        for i in range(len(shortest) - mid + 1):
-            sub = shortest[i:i+mid]
-            
-            # Əgər bu alt-ardıcıllıq digər bütün sətirlərdə varsa
-            if all(sub in s for s in other_seqs):
-                best_lcs = sub
+        # mid uzunluğunda namizəd alt sətirləri yoxlayırıq
+        # Check candidate substrings of length 'mid'
+        for i in range(n - mid + 1):
+            candidate = shortest_seq[i : i + mid]
+            if all(candidate in s for s in sequences):
+                lcs = candidate
                 found = True
-                break # Bu uzunluqda tapıldı, daha uzununu axtarmağa keçirik
-                
+                break
+
         if found:
-            low = mid + 1 # Sağ tərəfi axtar (daha uzun)
+            low = mid + 1
         else:
-            high = mid - 1 # Sol tərəfi axtar (daha qısa)
-            
-    return best_lcs
+            high = mid - 1
+    return lcs
 
-# Funksiyanı icra edirik
-result = longest_common_substring("rosalind_lcsm.txt")
-print(result)
 
-# Cavabı yeni fayla qeyd edirik
-with open("rosalind_lcsm_output.txt", "w") as output_file:
-    output_file.write(result)
+def main():
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    input_path = os.path.join(script_dir, "rosalind_lcsm.txt")
+    output_path = os.path.join(script_dir, "output.txt")
+
+    if not os.path.exists(input_path):
+        print(f"Xəta: {input_path} tapılmadı.")
+        return
+
+    seqs = read_fasta(input_path)
+    result = longest_common_substring(seqs)
+
+    print(f"LCS length: {len(result)}")
+
+    with open(output_path, "w") as f:
+        f.write(result + "\n")
+
+
+if __name__ == "__main__":
+    main()

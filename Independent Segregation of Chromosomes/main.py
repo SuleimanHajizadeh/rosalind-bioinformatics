@@ -1,63 +1,49 @@
+#!/usr/bin/env python3
 import os
 import math
 
-def read_input(file_path):
-    with open(file_path, "r") as f:
-        line = f.readline().strip()
-    if not line:
-        raise ValueError("Input file is empty")
-    return int(line)
+# Müstəqil segregasiyaya əsasən ən azı k xromosomun dominant getməsi ehtimalını tapırıq
+# Compute the probability of having at least k dominant alleles during independent segregation
 
-def solve_independent_segregation(n):
+
+def solve_ind(n):
+    # Xromosomların ümumi sayı: 2n
     # Total number of chromosomes is 2n
-    N = 2 * n
-    total_outcomes = 2 ** N
-    
-    # Precompute binomial coefficients
-    comb_vals = [math.comb(N, j) for j in range(N + 1)]
-    
-    # Suffix sums of binomial coefficients: suffix_sums[k] = sum_{j=k}^{2N} comb_vals[j]
-    suffix_sums = [0] * (N + 2)
-    for j in range(N, -1, -1):
-        suffix_sums[j] = suffix_sums[j + 1] + comb_vals[j]
-        
-    log_probs = []
-    for k in range(1, N + 1):
-        prob = suffix_sums[k] / total_outcomes
-        log_val = math.log10(prob)
-        # Avoid formatting negative zero (-0.000)
-        if abs(log_val) < 1e-9:
-            log_val = 0.0
-        log_probs.append(log_val)
-        
-    return log_probs
+    total = 2 * n
+    results = []
+
+    # k = 1-dən 2n-ə qədər ehtimalları hesablayırıq
+    # Calculate probabilities for k from 1 to 2n
+    for k in range(1, total + 1):
+        # 1 - (k-dan az dominant olması ehtimalı)
+        # Probability(at least k) = 1 - sum(C(2n, i) * 0.5^(2n) for i in range(k))
+        prob_less_than_k = 0.0
+        for i in range(k):
+            prob_less_than_k += math.comb(total, i) * (0.5**total)
+        prob_at_least_k = 1.0 - prob_less_than_k
+        results.append(f"{math.log10(prob_at_least_k):.3f}")
+
+    return " ".join(results)
+
 
 def main():
     script_dir = os.path.dirname(os.path.abspath(__file__))
-    input_path = os.path.join(script_dir, "rosalind_indc.txt")
-    
-    print(f"Reading input from: {input_path}")
-    n = read_input(input_path)
-    print(f"Homologous pairs count n: {n}")
-    print(f"Total chromosomes: {2 * n}")
-    
-    log_probs = solve_independent_segregation(n)
-    
-    # Format output as space-separated values with 3 decimal places
-    # Convert -0.000 to 0.000 to avoid negative zero formatting
-    formatted_probs = []
-    for x in log_probs:
-        val_str = f"{x:.3f}"
-        if val_str == "-0.000":
-            val_str = "0.000"
-        formatted_probs.append(val_str)
-    output_str = " ".join(formatted_probs)
-    
+    input_path = os.path.join(script_dir, "rosalind_indz.txt")
     output_path = os.path.join(script_dir, "output.txt")
-    with open(output_path, "w") as out_file:
-        out_file.write(output_str + "\n")
-        
-    print(f"Results successfully written to: {output_path}")
+
+    if not os.path.exists(input_path):
+        print(f"Xəta: {input_path} tapılmadı.")
+        return
+
+    with open(input_path, "r") as f:
+        n = int(f.read().strip())
+
+    result = solve_ind(n)
+    print(result)
+
+    with open(output_path, "w") as f:
+        f.write(result + "\n")
+
 
 if __name__ == "__main__":
     main()

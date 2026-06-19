@@ -1,4 +1,3 @@
-# rosalind_cons.py
 import os
 
 script_dir = os.path.dirname(os.path.abspath(__file__))
@@ -6,7 +5,8 @@ script_dir = os.path.dirname(os.path.abspath(__file__))
 sequences = []
 current_seq = ""
 
-# 1. FASTA formatlı rosalind_cons.txt faylını oxuyuruq
+# 1. FASTA formatlı faylı oxuyuruq
+# Read DNA sequences from FASTA format file
 input_path = os.path.join(script_dir, "rosalind_cons.txt")
 with open(input_path, "r") as file:
     for line in file:
@@ -20,34 +20,44 @@ with open(input_path, "r") as file:
     if current_seq:
         sequences.append(current_seq)
 
-n = len(sequences[0])
-bases = ['A', 'C', 'G', 'T']
-profile = {base: [0] * n for base in bases}
+n = len(sequences)
+l = len(sequences[0])
 
-# 2. Profil matrisini dəqiqliklə qururuq
-for seq in sequences:
-    for i, base in enumerate(seq):
-        profile[base][i] += 1
+# Profil matrisini (profile matrix) qururuq
+# Initialize and populate the profile matrix for A, C, G, T
+profile = {
+    'A': [0] * l,
+    'C': [0] * l,
+    'G': [0] * l,
+    'T': [0] * l
+}
 
-# 3. Konsensus ardıcıllığını tapırıq
+for i in range(l):
+    for seq in sequences:
+        profile[seq[i]][i] += 1
+
+# 3. Konsensus ardıcıllığı (consensus sequence) müəyyən edirik
+# Reconstruct consensus sequence by taking max frequency nucleotide at each position
 consensus = []
-for i in range(n):
-    max_base = ""
+for i in range(l):
     max_count = -1
-    for base in bases:
-        if profile[base][i] > max_count:
-            max_count = profile[base][i]
-            max_base = base
-    consensus.append(max_base)
+    max_char = ''
+    for char in ['A', 'C', 'G', 'T']:
+        if profile[char][i] > max_count:
+            max_count = profile[char][i]
+            max_char = char
+    consensus.append(max_char)
 
 consensus_str = "".join(consensus)
+print(consensus_str)
 
-# 4. Rosalind-in qəbul etdiyi təmiz formatda birbaşa fayla qeyd edirik
-output_path = os.path.join(script_dir, "rosalind_cons_output.txt")
-with open(output_path, "w") as out_file:
-    out_file.write(consensus_str + "\n")
-    for base in bases:
-        counts_str = " ".join(map(str, profile[base]))
-        out_file.write(f"{base}: {counts_str}\n")
-
-print(f"Uğurlu! Tam və təmiz nəticə '{output_path}' faylına yazıldı.")
+# 4. Profil matrisini yazdırırıq və fayla qeyd edirik
+# Write consensus sequence and profile matrix to output.txt
+output_path = os.path.join(script_dir, "output.txt")
+with open(output_path, "w") as output_file:
+    output_file.write(consensus_str + "\n")
+    for char in ['A', 'C', 'G', 'T']:
+        counts_str = " ".join(map(str, profile[char]))
+        row = f"{char}: {counts_str}"
+        print(row)
+        output_file.write(row + "\n")

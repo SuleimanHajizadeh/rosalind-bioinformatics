@@ -2,57 +2,56 @@ import os
 import sys
 
 # Rekursiya limitini artırırıq
+# Increase recursion limit
 sys.setrecursionlimit(2000)
 
-def read_fasta(file_path):
-    seq = ""
-    with open(file_path, "r") as f:
-        for line in f:
-            line = line.strip()
-            if not line.startswith(">"):
-                seq += line
-    return seq
+script_dir = os.path.dirname(os.path.abspath(__file__))
+input_path = os.path.join(script_dir, "rosalind_motz.txt")
 
-def solve_motzkin(seq):
-    memo = {}
+# FASTA faylını oxuyuruq
+# Parse sequence from FASTA format input
+with open(input_path, "r") as file:
+    lines = file.read().splitlines()
+
+seq = ""
+for line in lines:
+    if not line.startswith(">"):
+        seq += line.strip()
+
+# Komplementar cütləri yoxlamaq üçün köməkçi funksiya
+# Check if two nucleotides can pair
+def is_complement(a, b):
+    return (a == 'A' and b == 'U') or (a == 'U' and b == 'A') or \
+           (a == 'C' and b == 'G') or (a == 'G' and b == 'C')
+
+memo = {}
+
+# Motzkin nömrələrini hesablamaq üçün rekursiv funksiya (RNT strukturlarında)
+# Compute Motzkin numbers of RNA secondary structures with base crossings allowed
+def motzkin(s):
+    if len(s) <= 1:
+        return 1
+    if s in memo:
+        return memo[s]
     
-    # Tamamlayıcı cütlər
-    pairs = {('A', 'U'), ('U', 'A'), ('G', 'C'), ('C', 'G')}
+    # 1. Birinci nukleotidin cütləşmədiyi hal (motzkin(s[1:]))
+    # Option 1: First nucleotide does not pair
+    total = motzkin(s[1:]) % 1000000
     
-    def dp(i, j):
-        # Əgər alt-ardıcıllıq boşdursa və ya 1 elementlidirsə, yalnız 1 cütləşmə (boş cütləşmə) var
-        if i >= j:
-            return 1
-        if (i, j) in memo:
-            return memo[(i, j)]
+    # 2. Birinci nukleotidin digər uyğun nukleotidlərlə cütləşdiyi hallar
+    # Option 2: First nucleotide pairs with a compatible downstream nucleotide
+    for i in range(1, len(s)):
+        if is_complement(s[0], s[i]):
+            total = (total + motzkin(s[1:i]) * motzkin(s[i+1:])) % 1000000
             
-        # 1-ci Hal: seq[i] elementi heç bir cütləşmədə iştirak etmir
-        ans = dp(i + 1, j)
-        
-        # 2-ci Hal: seq[i] elementi seq[k] ilə cütləşir (i < k <= j)
-        for k in range(i + 1, j + 1):
-            if (seq[i], seq[k]) in pairs:
-                ans += dp(i + 1, k - 1) * dp(k + 1, j)
-                ans %= 1000000
-                
-        memo[(i, j)] = ans
-        return ans
+    memo[s] = total
+    return total
 
-    return dp(0, len(seq) - 1)
+result = motzkin(seq)
+print(result)
 
-def main():
-    script_dir = os.path.dirname(os.path.abspath(__file__))
-    input_path = os.path.join(script_dir, "rosalind_motz.txt")
-    
-    seq = read_fasta(input_path)
-    print(f"RNT ardıcıllığı uzunluğu: {len(seq)}")
-    
-    ans = solve_motzkin(seq)
-    print(f"Mümkün strukturların sayı (modulo 1,000,000) = {ans}")
-    
-    output_path = os.path.join(script_dir, "output.txt")
-    with open(output_path, "w") as out_file:
-        out_file.write(str(ans) + "\n")
-
-if __name__ == "__main__":
-    main()
+# Nəticəni output.txt faylına yazırıq
+# Save the final count to output.txt
+output_path = os.path.join(script_dir, "output.txt")
+with open(output_path, "w") as output_file:
+    output_file.write(str(result) + "\n")

@@ -1,36 +1,47 @@
-# rosalind_prob.py
 import os
 import math
 
-# 1. Faylın yerləşdiyi qovluğu tapırıq və girişi oxuyuruq
-script_dir = os.path.dirname(os.path.abspath(__file__))
-input_path = os.path.join(script_dir, "rosalind_prob.txt")
+# Verilmiş GC faizləri üzrə təsadüfi DNT zəncirinin mövcud olanla eyni olması ehtimalının loqarifmini tapırıq
+# Compute the common logarithm (log10) of the probability that a random DNA string matches a given one
 
-with open(input_path, "r") as file:
-    lines = file.read().splitlines()
+
+def main():
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    input_path = os.path.join(script_dir, "rosalind_prob.txt")
+    output_path = os.path.join(script_dir, "output.txt")
+
+    if not os.path.exists(input_path):
+        print(f"Xəta: {input_path} tapılmadı.")
+        return
+
+    with open(input_path, "r") as file:
+        lines = file.read().splitlines()
+
     s = lines[0].strip()
-    A = list(map(float, lines[1].split()))
+    a = list(map(float, lines[1].split()))
 
-# 2. DNT sətirində GC və AT nukleotidlərinin sayını təyin edirik
-n_gc = s.count('G') + s.count('C')
-n_at = s.count('A') + s.count('T')
+    # Sətirdəki G+C və A+T sayını hesablayırıq
+    # Count occurrences of G/C and A/T in the sequence
+    gc_count = s.count("G") + s.count("C")
+    at_count = s.count("A") + s.count("T")
 
-# 3. Hər bir GC-kontent ehtimalı üçün s sətirinin yaranma ehtimalının log10-nu hesablayırıq
-# GC nukleotidi üçün ehtimal: x / 2
-# AT nukleotidi üçün ehtimal: (1 - x) / 2
-# log10(P) = n_gc * log10(x/2) + n_at * log10((1-x)/2)
-B = []
-for x in A:
-    prob_gc = x / 2
-    prob_at = (1 - x) / 2
-    log_prob = n_gc * math.log10(prob_gc) + n_at * math.log10(prob_at)
-    # Rosalind cavabı adətən 3 onluq kəsr dəqiqliyi ilə yuvarlaqlaşdırır
-    B.append(f"{log_prob:.3f}")
+    results = []
+    # Hər bir GC faizi (gc_val) üçün ehtimalı loqarifmik olaraq hesablayırıq
+    # Compute log10 probability for each GC value in the array
+    for gc_val in a:
+        # G və ya C olma ehtimalı gc_val / 2, A və ya T olma ehtimalı (1 - gc_val) / 2
+        # Probability of G or C is gc_val / 2, and A or T is (1 - gc_val) / 2
+        prob_log = gc_count * math.log10(gc_val / 2) + at_count * math.log10(
+            (1.0 - gc_val) / 2
+        )
+        results.append(f"{prob_log:.3f}")
 
-# 4. Nəticələri aralarında boşluqla birləşdirib ekrana və output.txt faylına yazırıq
-result_str = " ".join(B)
-print(result_str)
+    result_str = " ".join(results)
+    print(result_str)
 
-output_path = os.path.join(script_dir, "output.txt")
-with open(output_path, "w") as out_file:
-    out_file.write(result_str + "\n")
+    with open(output_path, "w") as out_file:
+        out_file.write(result_str + "\n")
+
+
+if __name__ == "__main__":
+    main()
