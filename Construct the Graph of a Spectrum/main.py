@@ -12,7 +12,7 @@ def read_input():
 # Standard amin turşusu kütlələri cədvəli
 # Standard amino acid masses and symbols mapping
 MASS_TABLE = {
-    57: 'G', 71: 'A', 87: 'S', 97: 'P', 101: 'V', 103: 'C', 113: 'I', # or L
+    57: 'G', 71: 'A', 87: 'S', 97: 'P', 99: 'V', 101: 'T', 103: 'C', 113: 'I', # or L
     114: 'N', 115: 'D', 128: 'K', # or Q
     129: 'E', 131: 'M', 137: 'H', 147: 'F', 156: 'R', 163: 'Y', 186: 'W'
 }
