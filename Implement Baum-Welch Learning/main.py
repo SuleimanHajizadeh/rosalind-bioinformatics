@@ -121,7 +121,7 @@ def main():
     # İterasiya sayını və x simvol ardıcıllığını oxuyuruq
     # Parse iteration count and sequence x
     num_iter = int(parts[0])
-    x = parts[1]
+    x = "".join(parts[1].split())
     alphabet = parts[2].split()
     states = parts[3].split()
     
@@ -180,12 +180,7 @@ def format_matrix(states, target_headers, matrix):
         vals = []
         for t in target_headers:
             val = matrix[s][t]
-            if val == 0:
-                vals.append("0")
-            elif val == int(val):
-                vals.append(f"{float(val):.1f}")
-            else:
-                vals.append(str(round(val, 3)))
+            vals.append(f"{val:.3f}")
         output_lines.append(s + "\t" + "\t".join(vals))
     return "\n".join(output_lines)
 
