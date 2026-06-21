@@ -9,12 +9,13 @@ def read_input():
     with open(input_file, "r") as f:
         return list(map(int, f.read().split()))
 
-# Kütlələrin amin turşularına qarşılığı (K/Q və I/L üçün hər hansı birini götürə bilərik)
-# Reverse mass mapping (defaulting to G, A, S, etc.)
+# Kütlələrin amin turşularına qarşılığı (K/Q və I/L üçün hər hansı birini götürə bilərik, xəyali X və Z daxil olmaqla)
+# Reverse mass mapping (defaulting to G, A, S, etc., including imaginary X and Z)
 MASS_TABLE = {
-    57: 'G', 71: 'A', 87: 'S', 97: 'P', 101: 'V', 103: 'C', 113: 'I',
+    57: 'G', 71: 'A', 87: 'S', 97: 'P', 99: 'V', 101: 'T', 103: 'C', 113: 'I',
     114: 'N', 115: 'D', 128: 'K', 129: 'E', 131: 'M', 137: 'H', 147: 'F',
-    156: 'R', 163: 'Y', 186: 'W'
+    156: 'R', 163: 'Y', 186: 'W',
+    4: 'X', 5: 'Z'
 }
 
 # Peptid vektorunu peptidə çeviririk
