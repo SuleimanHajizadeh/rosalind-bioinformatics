@@ -1,85 +1,91 @@
-import sys
+import os
+import glob
 
-def solve():
-    # Use command line argument if provided, otherwise default to 'rosalind_bip.txt'
-    if len(sys.argv) > 1:
-        filename = sys.argv[1]
-    else:
-        filename = 'rosalind_bip.txt'
-        
-    try:
-        with open(filename, 'r') as f:
-            content = f.read().split()
-    except FileNotFoundError:
-        print(f"Error: File '{filename}' not found.")
-        print("Please download your dataset and save it as 'rosalind_bip.txt' in this directory.")
-        return
+# Cari qovluqdakı "rosalind_" ilə başlayan giriş faylını tapırıq.
+# Locate the input file starting with "rosalind_" in the current directory.
+input_files = glob.glob(os.path.join(os.path.dirname(__file__), 'rosalind_*.txt'))
+if not input_files:
+    raise FileNotFoundError("Giriş faylı tapılmadı / Input file not found")
 
-    if not content:
-        return
+# Giriş faylından məlumatları oxuyuruq.
+# Read data from the input file.
+with open(input_files[0], 'r') as f:
+    content = f.read().split()
 
-    # First token is the number of graphs k
-    k = int(content[0])
-    idx = 1
+if not content:
+    exit()
+
+# Qrafların sayı k-nı oxuyuruq.
+# Read the number of graphs k.
+k = int(content[0])
+idx = 1
+
+results = []
+
+for _ in range(k):
+    if idx >= len(content):
+        break
+    # Təpələrin (n) və tillərin (m) sayını oxuyuruq.
+    # Read the number of vertices (n) and edges (m).
+    n = int(content[idx])
+    m = int(content[idx+1])
+    idx += 2
     
-    results = []
-    
-    for _ in range(k):
-        if idx >= len(content):
-            break
-        n = int(content[idx])
-        m = int(content[idx+1])
+    # Tillərin siyahısını oxuyuruq.
+    # Read the list of edges.
+    edges = []
+    for _ in range(m):
+        u = int(content[idx])
+        v = int(content[idx+1])
+        edges.append((u, v))
         idx += 2
         
-        edges = []
-        for _ in range(m):
-            u = int(content[idx])
-            v = int(content[idx+1])
-            edges.append((u, v))
-            idx += 2
+    # Qonşuluq siyahısını qururuq (təpələr 1-dən n-ə qədər indekslənir).
+    # Build the adjacency list (vertices are indexed from 1 to n).
+    adj = {i: [] for i in range(1, n + 1)}
+    for u, v in edges:
+        if u in adj and v in adj:
+            adj[u].append(v)
+            adj[v].append(u)
             
-        # Build adjacency list (vertices are 1-indexed from 1 to n)
-        adj = {i: [] for i in range(1, n + 1)}
-        for u, v in edges:
-            if u in adj and v in adj:
-                adj[u].append(v)
-                adj[v].append(u)
-        
-        color = {}
-        is_bip = True
-        
-        # BFS coloring traversal
-        for start in range(1, n + 1):
-            if start not in color:
-                queue = [start]
-                color[start] = 0
-                head = 0
-                while head < len(queue):
-                    curr = queue[head]
-                    head += 1
-                    curr_color = color[curr]
-                    for neighbor in adj[curr]:
-                        if neighbor not in color:
-                            color[neighbor] = 1 - curr_color
-                            queue.append(neighbor)
-                        elif color[neighbor] == curr_color:
-                            is_bip = False
-                            break
-                    if not is_bip:
-                        break
-            if not is_bip:
-                break
-                
-        results.append("1" if is_bip else "-1")
-        
-    output_str = " ".join(results)
-    print("Result:")
-    print(output_str)
+    color = {}
+    is_bip = True
     
-    # Save the output to output.txt
-    with open('output.txt', 'w') as out_f:
-        out_f.write(output_str + '\n')
-    print("Output saved to output.txt")
+    # BFS ilə qrafın iki rənglə boyana bilməsini (bipartite) yoxlayırıq.
+    # BFS traversal to check if the graph is 2-colorable (bipartite).
+    for start in range(1, n + 1):
+        if start not in color:
+            queue = [start]
+            color[start] = 0
+            head = 0
+            while head < len(queue):
+                curr = queue[head]
+                head += 1
+                curr_color = color[curr]
+                for neighbor in adj[curr]:
+                    if neighbor not in color:
+                        color[neighbor] = 1 - curr_color
+                        queue.append(neighbor)
+                    elif color[neighbor] == curr_color:
+                        is_bip = False
+                        break
+                if not is_bip:
+                    break
+        if not is_bip:
+            break
+            
+    results.append("1" if is_bip else "-1")
 
-if __name__ == '__main__':
-    solve()
+# Nəticələri boşluqla ayrılmış şəkildə birləşdiririk.
+# Join the results with spaces.
+output_data = ' '.join(results)
+
+# Nəticəni konsolda göstəririk.
+# Print the results to the console.
+print(output_data[:100] + "...")
+
+# Nəticəni "output.txt" faylına yazırıq.
+# Write the results to the "output.txt" file.
+output_path = os.path.join(os.path.dirname(__file__), 'output.txt')
+with open(output_path, 'w') as f:
+    f.write(output_data + '\n')
