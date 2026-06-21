@@ -10,7 +10,7 @@ def read_input():
         return list(map(int, f.read().split()))
 
 MASS_TABLE = {
-    57: 'G', 71: 'A', 87: 'S', 97: 'P', 101: 'V', 103: 'C', 113: 'I',
+    57: 'G', 71: 'A', 87: 'S', 97: 'P', 99: 'V', 101: 'T', 103: 'C', 113: 'I',
     114: 'N', 115: 'D', 128: 'K', 129: 'E', 131: 'M', 137: 'H', 147: 'F',
     156: 'R', 163: 'Y', 186: 'W'
 }
@@ -19,7 +19,7 @@ MASS_TABLE = {
 # Sequence a Peptide by finding a path in the spectrum graph that maximizes total weight/score
 def sequence_peptide(spectrum_vector):
     n = len(spectrum_vector)
-    # Maksimum xalı tapmaq üçün dinamik proqramlaşdırma (DP) qururuq
+    # DP və geriyə izləmə massivlərini təyin edirik
     # DP arrays to track max scores and backtrack pointers
     dp = [-float('inf')] * (n + 1)
     dp[0] = 0
