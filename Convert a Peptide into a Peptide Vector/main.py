@@ -9,12 +9,13 @@ def read_input():
     with open(input_file, "r") as f:
         return f.read().strip()
 
-# Monoisotopik kütlələr
-# Monoisotopic masses mapping
+# Monoisotopik kütlələr (xəyali X və Z daxil olmaqla)
+# Monoisotopic masses mapping (including imaginary X and Z)
 MASS_TABLE = {
-    'G': 57, 'A': 71, 'S': 87, 'P': 97, 'V': 101, 'C': 103, 'I': 113, 'L': 113,
+    'G': 57, 'A': 71, 'S': 87, 'P': 97, 'V': 99, 'T': 101, 'C': 103, 'I': 113, 'L': 113,
     'N': 114, 'D': 115, 'K': 128, 'Q': 128, 'E': 129, 'M': 131, 'H': 137, 'F': 147,
-    'R': 156, 'Y': 163, 'W': 186
+    'R': 156, 'Y': 163, 'W': 186,
+    'X': 4, 'Z': 5
 }
 
 # Peptidi peptid vektoruna çeviririk
