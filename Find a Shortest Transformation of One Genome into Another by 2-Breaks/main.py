@@ -93,7 +93,7 @@ def shortest_rearrangement_path(p_str, q_str):
     edges_p = colored_edges(p)
     edges_q = colored_edges(q)
     
-    path = [format_genome(p)]
+    path = [p_str]
     
     while True:
         # Birləşmiş qrafı qururuq
@@ -127,9 +127,22 @@ def shortest_rearrangement_path(p_str, q_str):
         edges_p.append((u, y))
         edges_p.append((v, z))
         
-        curr_genome = graph_to_genome(edges_p)
-        path.append(format_genome(curr_genome))
-        
+        # Sonuncu addım olub olmadığını yoxlayırıq
+        # Check if this was the last rearrangement step
+        has_diff = False
+        adj_p_new = {u: v for u, v in edges_p}
+        adj_p_new.update({v: u for u, v in edges_p})
+        for node in adj_p_new:
+            if adj_p_new[node] != adj_q[node]:
+                has_diff = True
+                break
+                
+        if not has_diff:
+            path.append(q_str)
+        else:
+            curr_genome = graph_to_genome(edges_p)
+            path.append(format_genome(curr_genome))
+            
     return path
 
 def main():
