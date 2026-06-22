@@ -57,6 +57,7 @@ def maximal_non_branching_paths(adj):
     for v in in_deg:
         if v not in visited and in_deg[v] == 1 and out_deg[v] == 1:
             cycle = [v]
+            visited.add(v)
             w = adj[v][0]
             while w != v:
                 cycle.append(w)
