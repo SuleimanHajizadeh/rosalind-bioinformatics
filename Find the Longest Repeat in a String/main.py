@@ -27,13 +27,13 @@ def construct_suffix_trie(text):
 # Suffix tree/trie-də ən uzun təkrarlanan alt sətiri (longest repeat) tapırıq
 # Find the longest repeat in a string
 def longest_repeat(text):
-    trie = construct_suffix_trie(text)
+    trie = construct_suffix_trie(text + "$")
     
     # Ən çox daxili budaqlanan və yarpaq olmayan yollar ən uzun təkrarı verir
     # Internal nodes with branching paths correspond to repeated substrings
     best = ""
     
-    # DFS ilə ən dərin daxili düyünü axtarırıq
+    # DFS ilə bütün ağacı gəzirik və ən uzun təkrarlanan yolları tapırıq
     # DFS search for deepest internal node
     stack = [(0, "")]
     while stack:
@@ -41,7 +41,8 @@ def longest_repeat(text):
         if len(trie[node]) >= 2:
             if len(path) > len(best):
                 best = path
-            for char, child in trie[node].items():
+        for char, child in trie[node].items():
+            if char != "$":
                 stack.append((child, path + char))
     return best
 
