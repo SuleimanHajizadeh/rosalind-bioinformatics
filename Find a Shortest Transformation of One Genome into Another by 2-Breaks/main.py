@@ -61,7 +61,7 @@ def graph_to_genome(edges):
                 # Müvafiq geni tapırıq
                 # Identify synteny block ID
                 val = (curr + 1) // 2
-                sign = 1 if curr % 2 == 0 else -1
+                sign = 1 if curr % 2 == 1 else -1
                 chrom.append(sign * val)
                 
                 # Qonşu xromosom tili üzrə hərəkət edirik
