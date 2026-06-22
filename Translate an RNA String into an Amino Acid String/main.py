@@ -19,7 +19,7 @@ CODON_TABLE = {
     'GAA':'E', 'GAC':'D', 'GAG':'E', 'GAU':'D', 'GCA':'A', 'GCC':'A', 'GCG':'A', 'GCU':'A',
     'GGA':'G', 'GGC':'G', 'GGG':'G', 'GGU':'G', 'GUA':'V', 'GUC':'V', 'GUG':'V', 'GUU':'V',
     'UAC':'Y', 'UAU':'Y', 'UCA':'S', 'UCC':'S', 'UCG':'S', 'UCU':'S', 'UGC':'C', 'UGG':'W',
-    'UGU':'C', 'UUA':'L', 'UUG':'L', 'UUU':'F', 'UAA':'Stop', 'UAG':'Stop', 'UGA':'Stop'
+    'UGU':'C', 'UUA':'L', 'UUG':'L', 'UUU':'F', 'UUC':'F', 'UAA':'Stop', 'UAG':'Stop', 'UGA':'Stop'
 }
 
 # RNT ardıcıllığını amin turşusu ardıcıllığına tərcümə edirik
