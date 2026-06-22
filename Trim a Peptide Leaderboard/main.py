@@ -8,16 +8,26 @@ def read_input():
         return [], [], 0
     with open(input_file, "r") as f:
         lines = [line.strip() for line in f if line.strip()]
-    leaderboard = [list(map(int, p.split("-"))) for p in lines[0].split()]
+    leaderboard = lines[0].split()
     spectrum = list(map(int, lines[1].split()))
     N = int(lines[2])
     return leaderboard, spectrum, N
 
+# Amin turşularının unikal kütlələri
+# Amino acid mass mapping
+AMINO_ACID_MASS = {
+    'G': 57, 'A': 71, 'S': 87, 'P': 97, 'V': 99, 'T': 101, 'C': 103,
+    'I': 113, 'L': 113, 'N': 114, 'D': 115, 'K': 128, 'Q': 128,
+    'E': 129, 'M': 131, 'H': 137, 'F': 147, 'R': 156, 'Y': 163, 'W': 186
+}
+
+
 def linear_spectrum(peptide):
-    n = len(peptide)
+    masses = [AMINO_ACID_MASS[aa] for aa in peptide]
+    n = len(masses)
     prefix_mass = [0] * (n + 1)
     for i in range(n):
-        prefix_mass[i+1] = prefix_mass[i] + peptide[i]
+        prefix_mass[i+1] = prefix_mass[i] + masses[i]
     spectrum = [0]
     for length in range(1, n + 1):
         for start in range(n - length + 1):
@@ -57,7 +67,7 @@ def main():
     
     # Nəticələri formatlayırıq
     # Format trimmed peptides
-    result = ["-".join(map(str, p)) for p in trimmed]
+    result = trimmed
     
     import os
     script_dir = os.path.dirname(os.path.abspath(__file__))
