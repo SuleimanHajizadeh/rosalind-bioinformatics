@@ -82,15 +82,17 @@ def main():
     d_list = read_input()
     if not d_list:
         return
-    # n-i d_list ölçüsünə görə tapırıq: n*(n-1)/2 = len(d_list) -> n^2 - n - 2*len = 0
-    # Solve quadratic equation to find n
-    import math
-    n = int((1 + math.sqrt(1 + 8 * len(d_list))) / 2)
-    
     # 0 kütləsi çıxarılıb verilə bilər, ona görə d_list-in müsbət hissəsini götürürük
     # Keep only positive distances
     pos_d = [d for d in d_list if d > 0]
+    
+    # n-i pos_d-yə görə tapırıq: n*(n-1)/2 = len(pos_d) -> n^2 - n - 2*len = 0
+    # Solve quadratic equation to find n using positive distances count
+    import math
+    n = int((1 + math.sqrt(1 + 8 * len(pos_d))) / 2)
+    
     result = turnpike(pos_d, n)
+    result = sorted(result)
     
     import os
     script_dir = os.path.dirname(os.path.abspath(__file__))
