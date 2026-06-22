@@ -14,132 +14,70 @@ def read_input():
     return spectrum, threshold, max_score
 
 
-# === Variant A: 20 amin turşusu, xal aşağı hedd yoxdur (cari yanaşma) ===
-# 20 amino acids (I/L both 113, K/Q both 128), no lower score bound
-def solve_20aa_unbounded(spectrum, threshold, max_score):
-    from collections import defaultdict
-    aa_masses = _get_masses(len(spectrum))
+def spectral_dictionary_size(spectrum, threshold, max_score):
+    """
+    Spektral lüğət ölçüsünü hesabla.
+    DP cədvəli [0, max_score] aralığındadır — mənfi xallar göz ardı edilir.
+    20 amin turşusu işlədilir (I/L hər ikisi=113, K/Q hər ikisi=128).
+
+    Compute spectral dictionary size.
+    DP table is bounded to [0, max_score] — negative scores are discarded.
+    Uses all 20 amino acids (I and L both=113, K and Q both=128).
+    """
     m = len(spectrum)
-    dp = [defaultdict(int) for _ in range(m + 1)]
-    dp[0][0] = 1
-    for i in range(1, m + 1):
-        s_i = spectrum[i - 1]
-        for mass in aa_masses:
-            if i - mass >= 0:
-                for prev_score, count in list(dp[i - mass].items()):
-                    new_score = prev_score + s_i
-                    if new_score <= max_score:
-                        dp[i][new_score] += count
-    return sum(c for s, c in dp[m].items() if threshold <= s <= max_score)
 
+    # Amin turşusu kütlələri / Amino acid masses
+    if m < 57:
+        # Kiçik nümunə üçün xəyali amin turşuları: X=4, Z=5
+        # Small sample: imaginary amino acids X=4, Z=5
+        aa_masses = [4, 5]
+    else:
+        # Standart 20 amin turşusu kütlələri (I/L=113 iki dəfə, K/Q=128 iki dəfə)
+        # Standard 20 amino acid masses (I/L=113 twice, K/Q=128 twice)
+        aa_masses = [57, 71, 87, 97, 99, 101, 103,
+                     113, 113,   # I and L (same mass, distinct amino acids)
+                     114, 115,
+                     128, 128,   # K and Q (same mass, distinct amino acids)
+                     129, 131, 137, 147, 156, 163, 186]
 
-# === Variant B: 18 unikal kütlə, xal aşağı hedd yoxdur ===
-# 18 unique amino acid masses (I=L treated as same, K=Q treated as same)
-def solve_18aa_unbounded(spectrum, threshold, max_score):
-    from collections import defaultdict
-    aa_masses = _get_masses_18(len(spectrum))
-    m = len(spectrum)
-    dp = [defaultdict(int) for _ in range(m + 1)]
-    dp[0][0] = 1
-    for i in range(1, m + 1):
-        s_i = spectrum[i - 1]
-        for mass in aa_masses:
-            if i - mass >= 0:
-                for prev_score, count in list(dp[i - mass].items()):
-                    new_score = prev_score + s_i
-                    if new_score <= max_score:
-                        dp[i][new_score] += count
-    return sum(c for s, c in dp[m].items() if threshold <= s <= max_score)
-
-
-# === Variant C: 20 amin turşusu, xal [0, max_score] arasinda ===
-# 20 amino acids, score bounded to [0, max_score] — "table height" interpretation
-def solve_20aa_bounded(spectrum, threshold, max_score):
-    aa_masses = _get_masses(len(spectrum))
-    m = len(spectrum)
+    # 2D DP cədvəli: dp[mass][score] = həmin kütlə + xala uyğun peptid sayı
+    # 2D DP table: dp[mass][score] = count of peptides with given mass and score
+    # Score aralığı: [0, max_score] — cədvəlin hündürlüyü max_score-dur
     dp = [[0] * (max_score + 1) for _ in range(m + 1)]
     dp[0][0] = 1
+
     for i in range(1, m + 1):
-        s_i = spectrum[i - 1]
+        s_i = spectrum[i - 1]   # i-ci nodun spektral çəkisi
         for mass in aa_masses:
-            j = i - mass
+            j = i - mass        # əvvəlki kütlə mövqeyi
             if j < 0:
                 continue
-            for t in range(max_score + 1):
-                if dp[j][t] == 0:
+            for prev_t in range(max_score + 1):
+                if dp[j][prev_t] == 0:
                     continue
-                new_t = t + s_i
+                new_t = prev_t + s_i
+                # Yalnız [0, max_score] aralığındakı xalları saxla
+                # Only keep scores within [0, max_score]
                 if 0 <= new_t <= max_score:
-                    dp[i][new_t] += dp[j][t]
+                    dp[i][new_t] += dp[j][prev_t]
+
+    # threshold ilə max_score arasındakı xalların cəmi
+    # Sum counts for scores in [threshold, max_score]
     return sum(dp[m][threshold:max_score + 1])
-
-
-# === Variant D: 18 unikal kütlə, xal [0, max_score] arasinda ===
-# 18 unique masses, score bounded to [0, max_score]
-def solve_18aa_bounded(spectrum, threshold, max_score):
-    aa_masses = _get_masses_18(len(spectrum))
-    m = len(spectrum)
-    dp = [[0] * (max_score + 1) for _ in range(m + 1)]
-    dp[0][0] = 1
-    for i in range(1, m + 1):
-        s_i = spectrum[i - 1]
-        for mass in aa_masses:
-            j = i - mass
-            if j < 0:
-                continue
-            for t in range(max_score + 1):
-                if dp[j][t] == 0:
-                    continue
-                new_t = t + s_i
-                if 0 <= new_t <= max_score:
-                    dp[i][new_t] += dp[j][t]
-    return sum(dp[m][threshold:max_score + 1])
-
-
-def _get_masses(m):
-    """20 amin turşusu kütlələri (kiçik m üçün xəyali)"""
-    if m < 57:
-        return [4, 5]  # imaginary X=4, Z=5
-    # Standard 20 (I/L=113 twice, K/Q=128 twice)
-    return [57, 71, 87, 97, 99, 101, 103, 113, 113, 114, 115,
-            128, 128, 129, 131, 137, 147, 156, 163, 186]
-
-
-def _get_masses_18(m):
-    """18 unikal amin turşusu kütlələri"""
-    if m < 57:
-        return [4, 5]  # imaginary X=4, Z=5
-    # 18 unique masses
-    return [57, 71, 87, 97, 99, 101, 103, 113, 114, 115,
-            128, 129, 131, 137, 147, 156, 163, 186]
 
 
 def main():
     import os
     spectrum, threshold, max_score = read_input()
     if not spectrum:
-        print("Dataset tapılmadı!")
         return
 
-    print(f"Spectrum uzunluğu: {len(spectrum)}, threshold: {threshold}, max_score: {max_score}")
-    print()
+    result = spectral_dictionary_size(spectrum, threshold, max_score)
 
-    results = {
-        "A: 20aa, aşağı hədd yox  (ƏN GÜCLÜ EHTIMAL)": solve_20aa_unbounded(spectrum, threshold, max_score),
-        "B: 18aa, aşağı hədd yox ": solve_18aa_unbounded(spectrum, threshold, max_score),
-        "C: 20aa, xal [0..max]   ": solve_20aa_bounded(spectrum, threshold, max_score),
-        "D: 18aa, xal [0..max]   ": solve_18aa_bounded(spectrum, threshold, max_score),
-    }
-
-    for label, val in results.items():
-        print(f"  {label}: {val}")
-
-    # Əsas cavabı output.txt-ə yazırıq (Variant A - ən doğru ehtimal)
-    best = results["A: 20aa, aşağı hədd yox  (ƏN GÜCLÜ EHTIMAL)"]
     script_dir = os.path.dirname(os.path.abspath(__file__))
     with open(os.path.join(script_dir, "output.txt"), "w") as f:
-        f.write(str(best) + "\n")
-    print(f"\noutput.txt → {best}")
+        f.write(str(result) + "\n")
+    print(result)
 
 
 if __name__ == "__main__":
