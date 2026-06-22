@@ -25,8 +25,8 @@ def spectral_dictionary_size(spectrum, threshold, max_score):
         # Imaginary amino acids (X=4, Z=5)
         aa_masses = [4, 5]
     else:
-        # Standart 20 amin turşusunun kütlələri (I/L və K/Q təkrarlanmaqla)
-        # Standard 20 amino acid masses (with I/L and K/Q repeated)
+        # Standart 20 amin turşusunun kütlələri (I/L=113, K/Q=128 təkrar)
+        # Standard 20 amino acid masses (I/L both 113, K/Q both 128)
         aa_masses = [57, 71, 87, 97, 99, 101, 103, 113, 113, 114, 115, 128, 128, 129, 131, 137, 147, 156, 163, 186]
         
     from collections import defaultdict
@@ -41,7 +41,11 @@ def spectral_dictionary_size(spectrum, threshold, max_score):
             if i - mass >= 0:
                 s_i = spectrum[i - 1]
                 for prev_score, count in dp[i - mass].items():
-                    dp[i][prev_score + s_i] += count
+                    new_score = prev_score + s_i
+                    # Yalnız max_score-a qədər olan xalları saxlayırıq
+                    # Only keep scores up to max_score (prune states above ceiling)
+                    if new_score <= max_score:
+                        dp[i][new_score] += count
                     
     # threshold ilə max_score aralığındakı xalların sayını cəmləyirik
     # Sum the counts of peptides with scores in the range [threshold, max_score]
