@@ -11,7 +11,7 @@ def read_input():
 
 # Amin turşularının unikal kütlələri
 # Unique amino acid masses
-MASSES = [57, 71, 87, 97, 101, 103, 113, 114, 115, 128, 129, 131, 137, 147, 156, 163, 186]
+MASSES = [57, 71, 87, 97, 99, 101, 103, 113, 114, 115, 128, 129, 131, 137, 147, 156, 163, 186]
 
 # Verilən kütləyə malik peptidlərin sayını dinamik proqramlaşdırma ilə tapırıq
 # Compute the number of peptides of given total mass
