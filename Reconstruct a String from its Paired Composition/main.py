@@ -18,51 +18,75 @@ def read_input():
 # Construct De Bruijn graph from paired kmers
 def paired_de_bruijn(paired_reads):
     adj = {}
+    in_deg = {}
     for r1, r2 in paired_reads:
         prefix = (r1[:-1], r2[:-1])
         suffix = (r1[1:], r2[1:])
         if prefix not in adj:
             adj[prefix] = []
         adj[prefix].append(suffix)
-    return adj
+        in_deg[suffix] = in_deg.get(suffix, 0) + 1
+        if prefix not in in_deg:
+            in_deg[prefix] = 0
+    return adj, in_deg
 
-def find_start_end(adj):
+def find_start_node(adj, in_deg):
     out_deg = {u: len(v) for u, v in adj.items()}
-    in_deg = {}
-    for u in adj:
-        for v in adj[u]:
-            in_deg[v] = in_deg.get(v, 0) + 1
     all_nodes = set(out_deg.keys()).union(in_deg.keys())
     start_node = next(iter(all_nodes))
     for u in all_nodes:
         if out_deg.get(u, 0) - in_deg.get(u, 0) == 1:
-            start_node = u
-            break
+            return u
+    for u in all_nodes:
+        if out_deg.get(u, 0) > 0:
+            return u
     return start_node
-
-def find_eulerian_path(adj):
-    start_node = find_start_end(adj)
-    stack = [start_node]
-    path = []
-    adj_copy = {u: list(v) for u, v in adj.items()}
-    while stack:
-        u = stack[-1]
-        if adj_copy.get(u, []):
-            v = adj_copy[u].pop()
-            stack.append(v)
-        else:
-            path.append(stack.pop())
-    path.reverse()
-    return path
 
 # İkili (paired) oxunuşlara əsasən sətiri tapırıq
 # Reconstruct a string from its paired composition
 def reconstruct_string_paired(k, d, paired_reads):
-    adj = paired_de_bruijn(paired_reads)
-    path = find_eulerian_path(adj)
+    import sys
+    sys.setrecursionlimit(50000)
     
-    # Eyler yolundan sətirləri bərpa edirik
-    # Restore strings from path
+    adj, in_deg = paired_de_bruijn(paired_reads)
+    start_node = find_start_node(adj, in_deg)
+    num_edges = len(paired_reads)
+    path = [start_node]
+    
+    def dfs(curr):
+        m = len(path) - 1
+        # Pruning check: does path[m] conflict with past choices?
+        if m - d - 2 >= 0:
+            s1_char = path[m][0][-1]
+            target_idx = m - d - 2
+            if target_idx < k - 1:
+                s2_char = path[0][1][target_idx]
+            else:
+                s2_char = path[m - d - k][1][-1]
+            if s1_char != s2_char:
+                return False
+
+        if len(path) == num_edges + 1:
+            return True
+
+        if curr not in adj or not adj[curr]:
+            return False
+
+        # Try neighbors (make a copy of the list because we mutate it during iteration)
+        neighbors = list(adj[curr])
+        for nxt in neighbors:
+            adj[curr].remove(nxt)
+            path.append(nxt)
+            if dfs(nxt):
+                return True
+            path.pop()
+            adj[curr].append(nxt)
+        return False
+
+    if not dfs(start_node):
+        return "No valid path found"
+
+    # Spell the final string
     s1 = path[0][0]
     for node in path[1:]:
         s1 += node[0][-1]
@@ -71,12 +95,7 @@ def reconstruct_string_paired(k, d, paired_reads):
     for node in path[1:]:
         s2 += node[1][-1]
         
-    # İki ardıcıllığı birləşdiririk
-    # Combine the two paths taking the gap d into account
-    overlap = len(s1) - (k + d)
-    if s1[overlap:] == s2[:-overlap]:
-        return s1 + s2[-overlap:]
-    return s1 + s2
+    return s1 + s2[-(k + d):]
 
 def main():
     k, d, paired_reads = read_input()
@@ -88,6 +107,7 @@ def main():
     script_dir = os.path.dirname(os.path.abspath(__file__))
     with open(os.path.join(script_dir, "output.txt"), "w") as f:
         f.write(result + "\n")
+    print("Reconstructed string length:", len(result))
 
 if __name__ == "__main__":
     main()
