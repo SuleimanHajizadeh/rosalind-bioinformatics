@@ -32,12 +32,15 @@ def string_spelled_by_gapped_patterns(k, d, pairs):
     for p in second_patterns[1:]:
         suffix_str += p[-1]
         
-    # Üst-üstə düşən hissəni yoxlayıb birləşdiririk
-    # Combine both strings using the overlap
-    overlap = len(prefix_str) - (k + d)
-    if prefix_str[overlap:] == suffix_str[:-overlap]:
-        return prefix_str + suffix_str[-overlap:]
-    return prefix_str + suffix_str
+    # Üst-üstə düşən hissəni yoxlayıb birləşdiririk (Düzgün indekslərlə)
+    # Combine both strings using the correct overlap index check
+    offset = k + d
+    overlap_len = len(prefix_str) - offset
+    if prefix_str[offset:] == suffix_str[:overlap_len]:
+        return prefix_str + suffix_str[overlap_len:]
+    
+    # Əgər uyğun gəlməzsə (məsələn, səhv yol), birləşmə mümkün deyil
+    return "No valid string"
 
 def main():
     k, d, pairs = read_input()
@@ -49,6 +52,7 @@ def main():
     script_dir = os.path.dirname(os.path.abspath(__file__))
     with open(os.path.join(script_dir, "output.txt"), "w") as f:
         f.write(result + "\n")
+    print("Reconstructed string length:", len(result))
 
 if __name__ == "__main__":
     main()
