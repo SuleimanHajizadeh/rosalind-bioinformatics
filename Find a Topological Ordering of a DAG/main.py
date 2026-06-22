@@ -11,10 +11,12 @@ def read_input():
         for line in f:
             if not line.strip():
                 continue
-            u, v = line.strip().split(" -> ")
+            u, targets = line.strip().split(" -> ")
+            target_list = targets.split(",")
             if u not in adj:
                 adj[u] = []
-            adj[u].append(v)
+            for target in target_list:
+                adj[u].append(target)
     return adj
 
 # DFS vasitəsilə topoloji sıralamanı tapırıq
